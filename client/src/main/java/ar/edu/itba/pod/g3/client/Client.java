@@ -28,7 +28,7 @@ public class Client {
         Properties arguments = System.getProperties();
 
         Optional<Client> maybeClient = parseArguments(arguments);
-        if(maybeClient.isEmpty())
+        if(! maybeClient.isPresent())
             return;
 
         Client client = maybeClient.get();
