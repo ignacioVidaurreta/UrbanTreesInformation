@@ -24,12 +24,14 @@ public class Client {
     private final String city;
     private final String inputDirectory;
     private final String outputDirectory;
+    private final int query;
 
-    public Client(String city, List<String> ipAddresses, String inputDirectory, String outputDirectory) throws InvalidPropertyException {
+    public Client(String city, List<String> ipAddresses, String inputDirectory, String outputDirectory, int query) throws InvalidPropertyException {
         this.city = validateCity(city);
         this.ipAddresses = ipAddresses;
         this.inputDirectory = validateDirectory(inputDirectory, "inPath");
         this.outputDirectory = validateDirectory(outputDirectory, "outPath");
+        this.query = query;
 
     }
 
@@ -43,11 +45,12 @@ public class Client {
 
         final Client client = maybeClient.get();
 
-        logger.info(String.format("Created client with City: %s and IP Addresses: %s\n Input File: %s, Output File: %s",
+        logger.info(String.format("Created client with City: %s and IP Addresses: %s\n Input File: %s, Output File: %s. Query=%d",
                 client.getCity(),
                 client.getIpAddresses().toString(),
                 client.getInputDirectory(),
-                client.getOutputDirectory()
+                client.getOutputDirectory(),
+                client.getQuery()
                 ));
 
         // Parse the required data for the queries
@@ -95,5 +98,9 @@ public class Client {
 
     public String getCity() {
         return city;
+    }
+
+    public int getQuery() {
+        return query;
     }
 }
