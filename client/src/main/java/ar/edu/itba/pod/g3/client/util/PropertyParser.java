@@ -29,7 +29,7 @@ public class PropertyParser {
 
             return Optional.of(new Client(
                     city,
-                    List.of(addresses),
+                    Arrays.asList(addresses),
                     inPath,
                     outPath
 
