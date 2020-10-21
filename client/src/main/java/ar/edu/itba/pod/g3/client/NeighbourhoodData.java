@@ -1,0 +1,20 @@
+package ar.edu.itba.pod.g3.client;
+
+public class NeighbourhoodData {
+
+    private final String    neighbourhood;
+    private final int       population;
+
+    public NeighbourhoodData(String neighbourhood, int population) {
+        this.neighbourhood  = neighbourhood;
+        this.population     = population;
+    }
+
+    public String getNeighbourhood() {
+        return neighbourhood;
+    }
+
+    public int getPopulation() {
+        return population;
+    }
+}
