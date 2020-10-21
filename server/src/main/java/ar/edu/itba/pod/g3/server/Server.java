@@ -25,4 +25,6 @@ public class Server {
         Config config = new XmlConfigBuilder(configPath).build();
         HazelcastInstance h = Hazelcast.newHazelcastInstance(config);
     }
+
+
 }

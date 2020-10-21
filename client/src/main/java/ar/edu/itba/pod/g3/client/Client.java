@@ -7,31 +7,35 @@ import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.util.JsonUtil;
+import ar.edu.itba.pod.g3.client.csv.NeighbourhoodCSVReader;
+import ar.edu.itba.pod.g3.client.exceptions.MalformedCSVException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.ls.LSOutput;
 
+import java.io.IOException;
+import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
+
 import java.util.*;
 
-import static ar.edu.itba.pod.g3.client.util.PropertyParser.parseArguments;
-import static ar.edu.itba.pod.g3.client.util.PropertyParser.validateFile;
-import static ar.edu.itba.pod.g3.client.util.PropertyParser.validateCity;
+import static ar.edu.itba.pod.g3.client.util.PropertyParser.*;
 
 public class Client {
     private static Logger logger = LoggerFactory.getLogger(Client.class);
     private final List<String> ipAddresses;
     private final String city;
-    private final String inputFile;
-    private final String outputFile;
+    private final String inputDirectory;
+    private final String outputDirectory;
 
-    public Client(String city, List<String> ipAddresses, String inputFile, String outputFile) throws InvalidPropertyException {
+    public Client(String city, List<String> ipAddresses, String inputDirectory, String outputDirectory) throws InvalidPropertyException {
         this.city = validateCity(city);
         this.ipAddresses = ipAddresses;
-        this.inputFile = validateFile(inputFile, "inPath");
-        this.outputFile = validateFile(outputFile, "outPath");
+        this.inputDirectory = validateDirectory(inputDirectory, "inPath");
+        this.outputDirectory = validateDirectory(outputDirectory, "outPath");
+
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, MalformedCSVException {
         logger.info("UrbanTreesInformation Client Starting ...");
         final Properties arguments = System.getProperties();
 
@@ -44,9 +48,15 @@ public class Client {
         logger.info(String.format("Created client with City: %s and IP Addresses: %s\n Input File: %s, Output File: %s",
                 client.getCity(),
                 client.getIpAddresses().toString(),
-                client.getInputFile(),
-                client.getOutputFile()
-        ));
+                client.getInputDirectory(),
+                client.getOutputDirectory()
+                ));
+
+        // Parse the required data for the queries
+        List<NeighbourhoodData> neighbourhoodData = new LinkedList<>();
+        List<TreeData> neighbourhoodTreeData = new LinkedList<>();
+        NeighbourhoodCSVReader.readCsv(neighbourhoodData::add, buildNeighbourhoodCSVPath(client));
+        System.out.println(neighbourhoodData.toString());
 
         final ClientConfig clientConfig = initializeConfig(client);
         final HazelcastInstance hazelcastClient = HazelcastClient.newHazelcastClient(clientConfig);
@@ -68,13 +78,17 @@ public class Client {
         return clientConfig;
     }
 
-
-    public String getInputFile() {
-        return inputFile;
+    private static String buildNeighbourhoodCSVPath(Client client) {
+        return String.format( "%s/barrios%s.csv",client.getInputDirectory(), client.getCity());
     }
 
-    public String getOutputFile() {
-        return outputFile;
+
+    public String getInputDirectory() {
+        return inputDirectory;
+    }
+
+    public String getOutputDirectory() {
+        return outputDirectory;
     }
 
     public List<String> getIpAddresses() {

@@ -42,13 +42,13 @@ public class PropertyParser {
     }
 
     public static String validateCity(String city) throws InvalidPropertyException {
-        Set<String> validCities = new HashSet<>(List.of("BUE", "VAN"));
+        Set<String> validCities = new HashSet<>(Arrays.asList("BUE", "VAN"));
         if (!validCities.contains(city))
             throw new InvalidPropertyException(city, "city");
         return city;
     }
 
-    public static String validateFile(String path, String property) throws InvalidPropertyException{
+    public static String validateDirectory(String path, String property) throws InvalidPropertyException{
         Path filePath = Paths.get(path);
         if(! Files.exists(filePath))
             throw new InvalidPropertyException(path, property);
