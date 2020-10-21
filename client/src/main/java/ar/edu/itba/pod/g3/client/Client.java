@@ -1,17 +1,15 @@
 package ar.edu.itba.pod.g3.client;
 
+import ar.edu.itba.pod.g3.client.csv.NeighbourhoodCSVReader;
 import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
+import ar.edu.itba.pod.g3.client.exceptions.MalformedCSVException;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.util.JsonUtil;
-import ar.edu.itba.pod.g3.client.csv.NeighbourhoodCSVReader;
-import ar.edu.itba.pod.g3.client.exceptions.MalformedCSVException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.ls.LSOutput;
 
 import java.io.IOException;
 import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
