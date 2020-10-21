@@ -1,7 +1,13 @@
 package ar.edu.itba.pod.g3.client;
 
 import ar.edu.itba.pod.g3.client.csv.NeighbourhoodCSVReader;
+import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
 import ar.edu.itba.pod.g3.client.exceptions.MalformedCSVException;
+import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.client.config.ClientConfig;
+import com.hazelcast.client.config.ClientNetworkConfig;
+import com.hazelcast.config.GroupConfig;
+import com.hazelcast.core.HazelcastInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,13 +35,13 @@ public class Client {
 
     public static void main(String[] args) throws IOException, MalformedCSVException {
         logger.info("UrbanTreesInformation Client Starting ...");
-        Properties arguments = System.getProperties();
+        final Properties arguments = System.getProperties();
 
-        Optional<Client> maybeClient = parseArguments(arguments);
+        final Optional<Client> maybeClient = parseArguments(arguments);
         if (!maybeClient.isPresent())
             return;
 
-        Client client = maybeClient.get();
+        final Client client = maybeClient.get();
 
         logger.info(String.format("Created client with City: %s and IP Addresses: %s\n Input File: %s, Output File: %s",
                 client.getCity(),
@@ -50,8 +56,24 @@ public class Client {
         NeighbourhoodCSVReader.readCsv(neighbourhoodData::add, buildNeighbourhoodCSVPath(client));
         System.out.println(neighbourhoodData.toString());
 
+        final ClientConfig clientConfig = initializeConfig(client);
+        final HazelcastInstance hazelcastClient = HazelcastClient.newHazelcastClient(clientConfig);
 
+        final Map<String, String> datos = hazelcastClient.getMap("materias");
 
+        datos.put("72.42", "POD");
+
+        System.out.println(String.format("%d Datos en el cluster", datos.size()));
+
+        datos.keySet().forEach(k -> System.out.println(String.format("Datos con key %s= %s", k, datos.get(k))));
+    }
+
+    private static ClientConfig initializeConfig(final Client client) {
+        final ClientConfig clientConfig = new ClientConfig();
+        clientConfig.setGroupConfig(new GroupConfig("g3", "n4ch170c4p0"));
+        final ClientNetworkConfig networkConfig = clientConfig.getNetworkConfig();
+        client.getIpAddresses().forEach(networkConfig::addAddress);
+        return clientConfig;
     }
 
     private static String buildNeighbourhoodCSVPath(Client client) {
