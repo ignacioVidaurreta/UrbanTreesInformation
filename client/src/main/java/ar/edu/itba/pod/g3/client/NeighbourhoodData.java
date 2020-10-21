@@ -17,4 +17,9 @@ public class NeighbourhoodData {
     public int getPopulation() {
         return population;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Neighbourhood %s with population of %d", neighbourhood, population);
+    }
 }

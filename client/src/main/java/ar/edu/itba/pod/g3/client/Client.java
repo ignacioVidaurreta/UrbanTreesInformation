@@ -1,16 +1,16 @@
 package ar.edu.itba.pod.g3.client;
 
 import ar.edu.itba.pod.g3.client.csv.NeighbourhoodCSVReader;
-import ar.edu.itba.pod.g3.client.exceptions.InvalidParametersException;
 import ar.edu.itba.pod.g3.client.exceptions.MalformedCSVException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
+
 import java.util.*;
+
+import static ar.edu.itba.pod.g3.client.util.PropertyParser.*;
 
 public class Client {
     private static Logger logger = LoggerFactory.getLogger(Client.class);
@@ -19,19 +19,20 @@ public class Client {
     private final String inputDirectory;
     private final String outputDirectory;
 
-    Client(String city, List<String> ipAddresses, String inputDirectory, String outputDirectory){
-        this.city        = city;
+    public Client(String city, List<String> ipAddresses, String inputDirectory, String outputDirectory) throws InvalidPropertyException {
+        this.city = validateCity(city);
         this.ipAddresses = ipAddresses;
-        this.inputDirectory = inputDirectory;
-        this.outputDirectory = outputDirectory;
+        this.inputDirectory = validateDirectory(inputDirectory, "inPath");
+        this.outputDirectory = validateDirectory(outputDirectory, "outPath");
+
     }
 
-    public static void main(String[] args) throws IOException, MalformedCSVException, InvalidParametersException {
+    public static void main(String[] args) throws IOException, MalformedCSVException {
         logger.info("UrbanTreesInformation Client Starting ...");
         Properties arguments = System.getProperties();
 
         Optional<Client> maybeClient = parseArguments(arguments);
-        if(! maybeClient.isPresent())
+        if (!maybeClient.isPresent())
             return;
 
         Client client = maybeClient.get();
@@ -47,6 +48,7 @@ public class Client {
         List<NeighbourhoodData> neighbourhoodData = new LinkedList<>();
         List<TreeData> neighbourhoodTreeData = new LinkedList<>();
         NeighbourhoodCSVReader.readCsv(neighbourhoodData::add, buildNeighbourhoodCSVPath(client));
+        System.out.println(neighbourhoodData.toString());
 
 
 
@@ -56,41 +58,6 @@ public class Client {
         return String.format( "%s/barrios%s.csv",client.getInputDirectory(), client.getCity());
     }
 
-    private static Optional<Client> parseArguments(Properties arguments) throws InvalidParametersException {
-        Set<String> validCities = new HashSet<>(Arrays.asList("BUE", "VAN"));
-        if( ! (arguments.containsKey("city") && validCities.contains(arguments.getProperty("city"))) ) {
-            logger.error("Invalid -Dcity argument");
-            throw new InvalidParametersException("Invalid or missing -Dcity argument");
-        }
-
-        if (! (arguments.containsKey("addresses"))){
-            logger.error("Invalid -Daddresses argument");
-            throw new InvalidParametersException("must provide a -Daddress");
-        }
-
-        if (! (arguments.containsKey("inPath") && fileExists(arguments.getProperty("inPath")))){
-            logger.error("Invalid -DinPath argument");
-            throw new InvalidParametersException(String.format("directory %s does not exist", arguments.getProperty("inPath")));
-        }
-
-        if (! (arguments.containsKey("outPath") && fileExists(arguments.getProperty("outPath")))){
-            logger.error("Invalid -DoutPath argument");
-            throw new InvalidParametersException(String.format("directory %s does not exist", arguments.getProperty("outPath")));
-        }
-
-        return Optional.of(new Client(
-                arguments.getProperty("city"),
-                Arrays.asList(arguments.getProperty("addresses").split(";")),
-                arguments.getProperty("inPath"),
-                arguments.getProperty("outPath")
-        ));
-    }
-
-    private static boolean fileExists(String path){
-        Path filePath = Paths.get(path);
-
-        return Files.exists(filePath);
-    }
 
     public String getInputDirectory() {
         return inputDirectory;
