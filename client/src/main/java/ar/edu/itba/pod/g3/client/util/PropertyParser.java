@@ -19,6 +19,7 @@ public class PropertyParser {
             Optional<String> maybeAddresses = Optional.ofNullable(arguments.getProperty("addresses"));
             Optional<String> maybeInPath = Optional.ofNullable(arguments.getProperty("inPath"));
             Optional<String> maybeOutPath = Optional.ofNullable(arguments.getProperty("outPath"));
+            Optional<String> maybeQuery   = Optional.ofNullable(arguments.getProperty("query"));
 
             String city = maybeCity.orElseThrow(() -> new RequiredPropertyException("city"));
             String[] addresses = maybeAddresses.orElseThrow(
@@ -26,12 +27,14 @@ public class PropertyParser {
             ).split(";");
             String inPath = maybeInPath.orElseThrow(() -> new RequiredPropertyException("inPath"));
             String outPath = maybeOutPath.orElseThrow(() -> new RequiredPropertyException("outPath"));
+            String query   = maybeQuery.orElseThrow( () -> new RequiredPropertyException("query"));
 
             return Optional.of(new Client(
                     city,
                     Arrays.asList(addresses),
                     inPath,
-                    outPath
+                    outPath,
+                    Integer.valueOf(query)
 
             ));
         }catch (RequiredPropertyException | InvalidPropertyException ex){

@@ -24,15 +24,18 @@ echo "PERMISSIONS STEP   🔐"
 
 # Client permissions
 CLIENT_BASE_PATH="client/target/UrbanTreesInformation-client-${VERSION}"
-# chmod u+x ${CLIENT_BASE_PATH}/run-management.sh
-# chmod u+x ${CLIENT_BASE_PATH}/run-vote.sh
-# chmod u+x ${CLIENT_BASE_PATH}/run-fiscal.sh
-chmod u+x ${CLIENT_BASE_PATH}/run-client.sh
+for file in "$CLIENT_BASE_PATH"/*.sh
+do
+  chmod u+x "$file"
+done
 
 #Server permissions
 SERVER_BASE_PATH="server/target/UrbanTreesInformation-server-${VERSION}"
-#chmod u+x ${SERVER_BASE_PATH}/run-registry.sh
-chmod u+x ${SERVER_BASE_PATH}/run-server.sh
+
+for file in "$SERVER_BASE_PATH"/*.sh
+do
+  chmod u+x "$file"
+done
 
 echo "🚀 All Done! Have fun"
 
