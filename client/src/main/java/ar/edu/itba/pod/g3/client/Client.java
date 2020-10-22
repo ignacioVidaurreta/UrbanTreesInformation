@@ -1,6 +1,7 @@
 package ar.edu.itba.pod.g3.client;
 
 import ar.edu.itba.pod.g3.client.csv.NeighbourhoodCSVReader;
+import ar.edu.itba.pod.g3.client.csv.VANTreeCSVReader;
 import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
 import ar.edu.itba.pod.g3.client.exceptions.MalformedCSVException;
 import com.hazelcast.client.HazelcastClient;
@@ -58,6 +59,10 @@ public class Client {
         List<TreeData> neighbourhoodTreeData = new LinkedList<>();
         NeighbourhoodCSVReader.readCsv(neighbourhoodData::add, buildNeighbourhoodCSVPath(client));
         System.out.println(neighbourhoodData.toString());
+        List<TreeData> treeListVAN = new LinkedList<>();
+
+        VANTreeCSVReader.readCsv(treeListVAN::add, buildTreesCSVPath(client));
+        System.out.println(treeListVAN.toString());
 
         final ClientConfig clientConfig = initializeConfig(client);
         final HazelcastInstance hazelcastClient = HazelcastClient.newHazelcastClient(clientConfig);
@@ -79,8 +84,12 @@ public class Client {
         return clientConfig;
     }
 
-    private static String buildNeighbourhoodCSVPath(Client client) {
+    /* package */ static String buildNeighbourhoodCSVPath(Client client) {
         return String.format( "%s/barrios%s.csv",client.getInputDirectory(), client.getCity());
+    }
+
+    /* package */ static String buildTreesCSVPath(Client client){
+        return String.format( "%s/arboles%s.csv", client.getInputDirectory(), client.getCity());
     }
 
 
