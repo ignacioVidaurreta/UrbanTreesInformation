@@ -10,7 +10,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,8 +23,8 @@ public class CSVParserTest {
     @Before
     public void setUp(){
         try {
-            clientBUE = new Client("BUE", Collections.singletonList("127.0.0.1"), "../data/", "../data/", 1);
-            clientVAN = new Client("VAN", Collections.singletonList("127.0.0.1"), "../data/", "../data/", 1);
+            clientBUE = new Client("BUE", Collections.singletonList("127.0.0.1"), "testData/", "testData/", 1);
+            clientVAN = new Client("VAN", Collections.singletonList("127.0.0.1"), "testData/", "testData/", 1);
         }catch (InvalidPropertyException ex){
             ex.printStackTrace();
             Assert.fail();
