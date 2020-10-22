@@ -25,7 +25,6 @@ public class VANTreeCSVReader {
 
     }
 
-
     private static TreeData parseLine(String[] line) throws MalformedCSVException {
         if (line.length != 19)
             throw new MalformedCSVException();
