@@ -20,22 +20,21 @@ public class BUETreeCSVReader{
         reader.readNext();
         String[] line;
         while ((line = reader.readNext()) != null) {
-            Optional<TreeData> treeData = parseLine(line);
-            treeData.ifPresent(dataConsumer);
+            TreeData treeData = parseLine(line);
+            dataConsumer.accept(treeData);
         }
 
     }
 
     // Comuna: 2 calle: 4 cientif: 7 diam: 10 BUE
     // Calle: 2 cientif: 7 comuna 13 diam: 16 VAN
-    protected static Optional<TreeData> parseLine(String[] line) throws MalformedCSVException {
+    protected static TreeData parseLine(String[] line) throws MalformedCSVException {
         if (line.length != 13)
             throw new MalformedCSVException();
         String neighbourhood  = line[2];
         String streetName     = line[4];
         String scientificName = line[7];
         double diameter       = Double.parseDouble(line[11]);
-        TreeData treeData = new TreeData(neighbourhood, streetName, scientificName, diameter, "BUE");
-        return Optional.of(treeData);
+        return new TreeData(neighbourhood, streetName, scientificName, diameter, "BUE");
     }
 }
