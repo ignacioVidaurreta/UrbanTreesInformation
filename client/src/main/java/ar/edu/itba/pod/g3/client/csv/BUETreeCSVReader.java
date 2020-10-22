@@ -26,8 +26,7 @@ public class BUETreeCSVReader{
 
     }
 
-    // Comuna: 2 calle: 4 cientif: 7 diam: 10 BUE
-    // Calle: 2 cientif: 7 comuna 13 diam: 16 VAN
+
     protected static TreeData parseLine(String[] line) throws MalformedCSVException {
         if (line.length != 13)
             throw new MalformedCSVException();
