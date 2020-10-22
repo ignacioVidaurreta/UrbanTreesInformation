@@ -34,7 +34,7 @@ public class PropertyParser {
                     Arrays.asList(addresses),
                     inPath,
                     outPath,
-                    Integer.valueOf(query)
+                    Integer.parseInt(query)
 
             ));
         }catch (RequiredPropertyException | InvalidPropertyException ex){
