@@ -1,6 +1,8 @@
 package ar.edu.itba.pod.g3.client;
 
-public class NeighbourhoodData {
+import java.io.Serializable;
+
+public class NeighbourhoodData implements Serializable {
 
     private final String    neighbourhood;
     private final int       population;

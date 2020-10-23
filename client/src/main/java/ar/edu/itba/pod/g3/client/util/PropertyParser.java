@@ -44,6 +44,28 @@ public class PropertyParser {
         }
     }
 
+    public static boolean setQuerySpecificArguments(Properties arguments, Client client){
+        try {
+            switch (client.getQuery()) {
+                case 1:
+                case 2:
+                case 3:
+                    break;
+                case 4:
+                    Optional<String> maybeMin = Optional.ofNullable(arguments.getProperty("min"));
+                    Optional<String> maybeName = Optional.ofNullable(arguments.getProperty("name"));
+
+                    client.setMin(maybeMin.orElseThrow(() -> new RequiredPropertyException("min")));
+                    client.setName(maybeName.orElseThrow(()-> new RequiredPropertyException("name")));
+
+            }
+        }catch (RequiredPropertyException rex){
+            logger.error(String.format("Missing required argument for query %d, %s", client.getQuery(), rex.getMessage()));
+            return false;
+        }
+        return true;
+    }
+
     public static String validateCity(String city) throws InvalidPropertyException {
         Set<String> validCities = new HashSet<>(Arrays.asList("BUE", "VAN"));
         if (!validCities.contains(city))
@@ -57,6 +79,13 @@ public class PropertyParser {
             throw new InvalidPropertyException(path, property);
 
         return path;
+    }
+
+    public static int validateQuery(int query) throws InvalidPropertyException{
+        if(query < 1 || query > 5)
+            throw new InvalidPropertyException("Query must be a number between 1 and 5");
+
+        return query;
     }
 
 }

@@ -1,6 +1,8 @@
 package ar.edu.itba.pod.g3.client;
 
 import ar.edu.itba.pod.g3.client.csv.NeighbourhoodCSVReader;
+import ar.edu.itba.pod.g3.client.csv.BUETreeCSVReader;
+import ar.edu.itba.pod.g3.client.csv.VANTreeCSVReader;
 import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
 import ar.edu.itba.pod.g3.client.exceptions.MalformedCSVException;
 import com.hazelcast.client.HazelcastClient;
@@ -8,11 +10,12 @@ import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IList;
+import com.hazelcast.core.IMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
 
 import java.util.*;
 
@@ -26,13 +29,46 @@ public class Client {
     private final String outputDirectory;
     private final int query;
 
+    // QUERY SPECIFIC ARGUMENTS
+    private int min;
+    private String name;
+
     public Client(String city, List<String> ipAddresses, String inputDirectory, String outputDirectory, int query) throws InvalidPropertyException {
         this.city = validateCity(city);
         this.ipAddresses = ipAddresses;
         this.inputDirectory = validateDirectory(inputDirectory, "inPath");
         this.outputDirectory = validateDirectory(outputDirectory, "outPath");
-        this.query = query;
+        this.query = validateQuery(query);
 
+    }
+
+    public void executeQuery(){
+
+        ClientConfig config = initializeConfig(this);
+        final HazelcastInstance hazelcastInstance = HazelcastClient.newHazelcastClient(config);
+        switch (this.query){
+            case 1:
+            case 2:
+            case 3:
+                break;
+            case 4:
+                runMinTreeQuery(hazelcastInstance);
+                break;
+
+        }
+    }
+
+
+    private void runMinTreeQuery(HazelcastInstance hazelcastInstance){
+        IList<TreeData> treeDataList =  hazelcastInstance.getList("g3-treeData");
+        try {
+            BUETreeCSVReader.readCsv(treeDataList::add, buildBUETreesCSVPath(this), (TreeData data)-> data.getScientificName().equals(this.name));
+            VANTreeCSVReader.readCsv(treeDataList::add, buildVANTreesCSVPath(this), (TreeData data)-> data.getScientificName().equals(this.name));
+
+            System.out.println(Arrays.toString(treeDataList.toArray()));
+        }catch (MalformedCSVException | IOException ex){
+            logger.error(String.format("Parsing error: %s", ex.getMessage()));
+        }
     }
 
     public static void main(String[] args) throws IOException, MalformedCSVException {
@@ -44,6 +80,10 @@ public class Client {
             return;
 
         final Client client = maybeClient.get();
+        boolean hasQuerySpecificArgs = setQuerySpecificArguments(arguments, client);
+
+        if(!hasQuerySpecificArgs)
+            return;
 
         logger.info(String.format("Created client with City: %s and IP Addresses: %s\n Input File: %s, Output File: %s. Query=%d",
                 client.getCity(),
@@ -53,22 +93,7 @@ public class Client {
                 client.getQuery()
                 ));
 
-        // Parse the required data for the queries
-        List<NeighbourhoodData> neighbourhoodData = new LinkedList<>();
-        List<TreeData> neighbourhoodTreeData = new LinkedList<>();
-        NeighbourhoodCSVReader.readCsv(neighbourhoodData::add, buildNeighbourhoodCSVPath(client));
-        System.out.println(neighbourhoodData.toString());
-
-        final ClientConfig clientConfig = initializeConfig(client);
-        final HazelcastInstance hazelcastClient = HazelcastClient.newHazelcastClient(clientConfig);
-
-        final Map<String, String> datos = hazelcastClient.getMap("materias");
-
-        datos.put("72.42", "POD");
-
-        System.out.println(String.format("%d Datos en el cluster", datos.size()));
-
-        datos.keySet().forEach(k -> System.out.println(String.format("Datos con key %s= %s", k, datos.get(k))));
+        client.executeQuery();
     }
 
     private static ClientConfig initializeConfig(final Client client) {
@@ -81,6 +106,17 @@ public class Client {
 
     private static String buildNeighbourhoodCSVPath(Client client) {
         return String.format( "%s/barrios%s.csv",client.getInputDirectory(), client.getCity());
+    }
+
+    /* package */ static String buildTreesCSVPath(Client client){
+        return String.format( "%s/arboles%s.csv", client.getInputDirectory(), client.getCity());
+    }
+    /* package */ static String buildVANTreesCSVPath(Client client){
+        return String.format("%s/arbolesVAN.csv", client.getInputDirectory());
+    }
+
+    /* package */ static String buildBUETreesCSVPath(Client client){
+        return String.format("%s/arbolesBUE.csv", client.getInputDirectory());
     }
 
 
@@ -102,5 +138,21 @@ public class Client {
 
     public int getQuery() {
         return query;
+    }
+
+    public int getMin() {
+        return min;
+    }
+
+    public void setMin(String min) {
+        this.min = Integer.parseInt(min);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
