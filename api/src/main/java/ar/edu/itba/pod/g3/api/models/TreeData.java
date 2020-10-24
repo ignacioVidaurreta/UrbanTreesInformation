@@ -17,6 +17,7 @@ public class TreeData implements DataSerializable {
     private double diameter;
     private String city;
 
+    public TreeData() {}
 
     public TreeData(String neighbourhood, String streetName, String scientificName, double diameter, String city) {
         this.neighbourhood  = neighbourhood;
@@ -59,8 +60,8 @@ public class TreeData implements DataSerializable {
         objectDataOutput.writeUTF(neighbourhood);
         objectDataOutput.writeUTF(streetName);
         objectDataOutput.writeUTF(scientificName);
-        objectDataOutput.writeUTF(String.format("%f",diameter));
         objectDataOutput.writeUTF(city);
+        objectDataOutput.writeDouble(diameter);
     }
 
     @Override
@@ -68,7 +69,8 @@ public class TreeData implements DataSerializable {
         this.neighbourhood  = objectDataInput.readUTF();
         this.streetName     = objectDataInput.readUTF();
         this.scientificName = objectDataInput.readUTF();
-        this.diameter       = Double.parseDouble(objectDataInput.readUTF());
         this.city           = objectDataInput.readUTF();
+        this.diameter       = objectDataInput.readDouble();
+
     }
 }

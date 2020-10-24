@@ -72,9 +72,9 @@ public class Client {
 
     private static void streetWithMoreTreesByNeighborhood(HazelcastInstance hazelcastClient, Client client) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
         final IList<TreeData> treesList = hazelcastClient.getList("g3-trees");
-        final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
-        final JobTracker jobTracker = hazelcastClient.getJobTracker("query-2");
         BUETreeCSVReader.readCsv(treesList::add, buildTreesCSVPath(client));
+        final JobTracker jobTracker = hazelcastClient.getJobTracker("query-2");
+        final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
 
         Job<String, TreeData> job = jobTracker.newJob(source);
         Map<String, Tuple<String, Integer>> result = null;
@@ -84,7 +84,6 @@ public class Client {
                 .reducer(new Query2ReducerFactory())
                 .submit(new Query2Collator());
         result = future.get();
-
         System.out.println(result);
 //        ResultWriter.writeResult2(resultPath, result);
     }
