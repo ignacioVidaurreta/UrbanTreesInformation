@@ -1,7 +1,12 @@
 package ar.edu.itba.pod.g3.client;
 
-import ar.edu.itba.pod.g3.client.csv.NeighbourhoodCSVReader;
-import ar.edu.itba.pod.g3.client.csv.VANTreeCSVReader;
+import ar.edu.itba.pod.g3.api.models.NeighbourhoodData;
+import ar.edu.itba.pod.g3.api.models.TreeData;
+import ar.edu.itba.pod.g3.api.models.Tuple;
+import ar.edu.itba.pod.g3.api.query2.Query2Collator;
+import ar.edu.itba.pod.g3.api.query2.Query2Mapper;
+import ar.edu.itba.pod.g3.api.query2.Query2ReducerFactory;
+import ar.edu.itba.pod.g3.client.csv.BUETreeCSVReader;
 import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
 import ar.edu.itba.pod.g3.client.exceptions.MalformedCSVException;
 import com.hazelcast.client.HazelcastClient;
@@ -9,13 +14,18 @@ import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.core.IList;
+import com.hazelcast.mapreduce.Job;
+import com.hazelcast.mapreduce.JobTracker;
+import com.hazelcast.mapreduce.KeyValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 import static ar.edu.itba.pod.g3.client.util.PropertyParser.*;
 
@@ -33,10 +43,9 @@ public class Client {
         this.inputDirectory = validateDirectory(inputDirectory, "inPath");
         this.outputDirectory = validateDirectory(outputDirectory, "outPath");
         this.query = query;
-
     }
 
-    public static void main(String[] args) throws IOException, MalformedCSVException {
+    public static void main(String[] args) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
         logger.info("UrbanTreesInformation Client Starting ...");
         final Properties arguments = System.getProperties();
 
@@ -54,26 +63,30 @@ public class Client {
                 client.getQuery()
                 ));
 
-        // Parse the required data for the queries
-        List<NeighbourhoodData> neighbourhoodData = new LinkedList<>();
-        List<TreeData> neighbourhoodTreeData = new LinkedList<>();
-        NeighbourhoodCSVReader.readCsv(neighbourhoodData::add, buildNeighbourhoodCSVPath(client));
-        System.out.println(neighbourhoodData.toString());
-        List<TreeData> treeListVAN = new LinkedList<>();
-
-        VANTreeCSVReader.readCsv(treeListVAN::add, buildTreesCSVPath(client));
-        System.out.println(treeListVAN.toString());
-
+        // Hazelcast config
         final ClientConfig clientConfig = initializeConfig(client);
         final HazelcastInstance hazelcastClient = HazelcastClient.newHazelcastClient(clientConfig);
 
-        final Map<String, String> datos = hazelcastClient.getMap("materias");
+        streetWithMoreTreesByNeighborhood(hazelcastClient, client);
+    }
 
-        datos.put("72.42", "POD");
+    private static void streetWithMoreTreesByNeighborhood(HazelcastInstance hazelcastClient, Client client) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
+        final IList<TreeData> treesList = hazelcastClient.getList("g3-trees");
+        final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
+        final JobTracker jobTracker = hazelcastClient.getJobTracker("query-2");
+        BUETreeCSVReader.readCsv(treesList::add, buildTreesCSVPath(client));
 
-        System.out.println(String.format("%d Datos en el cluster", datos.size()));
+        Job<String, TreeData> job = jobTracker.newJob(source);
+        Map<String, Tuple<String, Integer>> result = null;
 
-        datos.keySet().forEach(k -> System.out.println(String.format("Datos con key %s= %s", k, datos.get(k))));
+        ICompletableFuture<Map<String, Tuple<String, Integer>>> future = job
+                .mapper(new Query2Mapper())
+                .reducer(new Query2ReducerFactory())
+                .submit(new Query2Collator());
+        result = future.get();
+
+        System.out.println(result);
+//        ResultWriter.writeResult2(resultPath, result);
     }
 
     private static ClientConfig initializeConfig(final Client client) {

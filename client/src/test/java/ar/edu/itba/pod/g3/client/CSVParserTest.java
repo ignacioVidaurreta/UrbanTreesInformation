@@ -1,5 +1,7 @@
 package ar.edu.itba.pod.g3.client;
 
+import ar.edu.itba.pod.g3.api.models.NeighbourhoodData;
+import ar.edu.itba.pod.g3.api.models.TreeData;
 import ar.edu.itba.pod.g3.client.csv.BUETreeCSVReader;
 import ar.edu.itba.pod.g3.client.csv.NeighbourhoodCSVReader;
 import ar.edu.itba.pod.g3.client.csv.VANTreeCSVReader;

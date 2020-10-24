@@ -8,7 +8,7 @@ import com.opencsv.CSVReader ;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-import ar.edu.itba.pod.g3.client.NeighbourhoodData;
+import ar.edu.itba.pod.g3.api.models.NeighbourhoodData;
 
 public class NeighbourhoodCSVReader {
 
