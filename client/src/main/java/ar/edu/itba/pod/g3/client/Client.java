@@ -9,6 +9,7 @@ import ar.edu.itba.pod.g3.api.query2.Query2ReducerFactory;
 import ar.edu.itba.pod.g3.client.csv.BUETreeCSVReader;
 import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
 import ar.edu.itba.pod.g3.client.exceptions.MalformedCSVException;
+import ar.edu.itba.pod.g3.client.util.ResultWriter;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.ClientNetworkConfig;
@@ -22,6 +23,8 @@ import com.hazelcast.mapreduce.KeyValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import java.util.*;
@@ -31,11 +34,19 @@ import static ar.edu.itba.pod.g3.client.util.PropertyParser.*;
 
 public class Client {
     private static Logger logger = LoggerFactory.getLogger(Client.class);
-    private final List<String> ipAddresses;
-    private final String city;
-    private final String inputDirectory;
-    private final String outputDirectory;
-    private final int query;
+    private List<String> ipAddresses;
+    private String city;
+    private String inputDirectory;
+    private String outputDirectory;
+    private int query;
+    private String resultFilePath;
+    private String timeFilePath;
+    private FileWriter timeFile;
+    private BufferedWriter timeFileWriter;
+
+    //TODO: (A big one) the logic behind handling the properties parsing in another class makes the constructor
+    // a Necessity. It would be ideal that all attributes are static so there are not as many parameters being
+    // handled between all methods. This requires a well though refactor.
 
     public Client(String city, List<String> ipAddresses, String inputDirectory, String outputDirectory, int query) throws InvalidPropertyException {
         this.city = validateCity(city);
@@ -43,6 +54,8 @@ public class Client {
         this.inputDirectory = validateDirectory(inputDirectory, "inPath");
         this.outputDirectory = validateDirectory(outputDirectory, "outPath");
         this.query = query;
+        this.resultFilePath = outputDirectory + "/query" + query + ".csv";
+        this.timeFilePath = outputDirectory + "/time" + query + ".txt";
     }
 
     public static void main(String[] args) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
@@ -53,7 +66,7 @@ public class Client {
         if (!maybeClient.isPresent())
             return;
 
-        final Client client = maybeClient.get();
+        Client client = maybeClient.get();
 
         logger.info(String.format("Created client with City: %s and IP Addresses: %s\n Input File: %s, Output File: %s. Query=%d",
                 client.getCity(),
@@ -63,16 +76,42 @@ public class Client {
                 client.getQuery()
                 ));
 
-        // Hazelcast config
         final ClientConfig clientConfig = initializeConfig(client);
         final HazelcastInstance hazelcastClient = HazelcastClient.newHazelcastClient(clientConfig);
+        final IList<TreeData> treesList = hazelcastClient.getList("g3-trees");
+        setUpOutput(client, treesList);
+        solveQuery(hazelcastClient, client, treesList);
+        client.timeFileWriter.close();
 
-        streetWithMoreTreesByNeighborhood(hazelcastClient, client);
+        logger.info("Client shutting down...");
+        hazelcastClient.shutdown();
     }
 
-    private static void streetWithMoreTreesByNeighborhood(HazelcastInstance hazelcastClient, Client client) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
-        final IList<TreeData> treesList = hazelcastClient.getList("g3-trees");
+    private static void setUpOutput(Client client, IList<TreeData> treesList) throws IOException, MalformedCSVException {
+        // Time file
+        client.timeFile = new FileWriter(client.timeFilePath) ;
+        client.timeFileWriter = new BufferedWriter(client.timeFile);
+        // Clear list
+        treesList.clear();
+        // Load info
+        ResultWriter.writeTime(client.timeFileWriter, "Inicio de la lectura del archivo");
         BUETreeCSVReader.readCsv(treesList::add, buildTreesCSVPath(client));
+        ResultWriter.writeTime(client.timeFileWriter, "Fin de lectura del archivo");
+    }
+
+    private static void solveQuery(HazelcastInstance hazelcastClient, Client client, IList<TreeData> treesList) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
+        ResultWriter.writeTime(client.timeFileWriter, "Inicio del trabajo map/reduce");
+
+        switch(client.getQuery()) {
+            case 2:
+                streetWithMoreTreesByNeighborhood(hazelcastClient, client, treesList);
+                break;
+            default:
+        }
+        ResultWriter.writeTime(client.timeFileWriter, "Fin del trabajo map/reduce");
+    }
+
+    private static void streetWithMoreTreesByNeighborhood(HazelcastInstance hazelcastClient, Client client, IList<TreeData> treesList) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
         final JobTracker jobTracker = hazelcastClient.getJobTracker("query-2");
         final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
 
@@ -84,8 +123,8 @@ public class Client {
                 .reducer(new Query2ReducerFactory())
                 .submit(new Query2Collator());
         result = future.get();
-        System.out.println(result);
-//        ResultWriter.writeResult2(resultPath, result);
+
+        ResultWriter.writeQuery2Result(client.resultFilePath, result);
     }
 
     private static ClientConfig initializeConfig(final Client client) {
@@ -123,5 +162,25 @@ public class Client {
 
     public int getQuery() {
         return query;
+    }
+
+    public static Logger getLogger() {
+        return logger;
+    }
+
+    public String getResultFilePath() {
+        return resultFilePath;
+    }
+
+    public String getTimeFilePath() {
+        return timeFilePath;
+    }
+
+    public FileWriter getTimeFile() {
+        return timeFile;
+    }
+
+    public BufferedWriter getTimeFileWriter() {
+        return timeFileWriter;
     }
 }
