@@ -1,12 +1,11 @@
 package ar.edu.itba.pod.g3.client.csv;
 
-import ar.edu.itba.pod.g3.client.TreeData;
+import ar.edu.itba.pod.g3.api.models.TreeData;
 import ar.edu.itba.pod.g3.client.exceptions.MalformedCSVException;
 
 import com.opencsv.CSVReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
