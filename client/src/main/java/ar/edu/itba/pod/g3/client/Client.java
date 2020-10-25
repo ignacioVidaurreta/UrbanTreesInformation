@@ -7,6 +7,7 @@ import ar.edu.itba.pod.g3.api.query2.Query2Collator;
 import ar.edu.itba.pod.g3.api.query2.Query2Mapper;
 import ar.edu.itba.pod.g3.api.query2.Query2ReducerFactory;
 import ar.edu.itba.pod.g3.client.csv.BUETreeCSVReader;
+import ar.edu.itba.pod.g3.client.csv.VANTreeCSVReader;
 import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
 import ar.edu.itba.pod.g3.client.exceptions.MalformedCSVException;
 import ar.edu.itba.pod.g3.client.util.ResultWriter;
@@ -108,7 +109,13 @@ public class Client {
         treesList.clear();
         // Load info
         ResultWriter.writeTime(client.timeFileWriter, "Inicio de la lectura del archivo");
-        BUETreeCSVReader.readCsv(treesList::add, buildTreesCSVPath(client));
+
+        if(client.getCity().equals("BUE")) { // TODO: better check for city
+            BUETreeCSVReader.readCsv(treesList::add, buildTreesCSVPath(client));
+        } else if(client.getCity().equals("VAN")) {
+            VANTreeCSVReader.readCsv(treesList::add, buildTreesCSVPath(client));
+        }
+
         ResultWriter.writeTime(client.timeFileWriter, "Fin de lectura del archivo");
     }
 
