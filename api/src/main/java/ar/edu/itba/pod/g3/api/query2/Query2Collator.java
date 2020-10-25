@@ -7,15 +7,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Query2Collator implements Collator<Map.Entry<Tuple<String, String>, Integer>, Map<String, Tuple<String, Integer>>> {
+
+    private int min;
+
+    public Query2Collator(int min) {
+        this.min = min;
+    }
+
     @Override
-    public Map<String, Tuple<String, Integer>> collate(Iterable<Map.Entry<Tuple<String, String>, Integer>> values ) {
+    public Map<String, Tuple<String, Integer>> collate(Iterable<Map.Entry<Tuple<String, String>, Integer>> values) {
         Map<String, Tuple<String, Integer>> map = new HashMap<>();
         for (Map.Entry<Tuple<String, String>, Integer> entry : values) {
-            if(!map.containsKey(entry.getKey().getFirst())) {
-                map.put(entry.getKey().getFirst(), new Tuple<>(entry.getKey().getSecond(), entry.getValue()));
-            }
-            else if(map.get(entry.getKey().getFirst()).getSecond() < entry.getValue()) {
-                map.put(entry.getKey().getFirst(), new Tuple<>(entry.getKey().getSecond(), entry.getValue()));
+            if(entry.getValue() > this.min) {
+                if (!map.containsKey(entry.getKey().getFirst())) {
+                    map.put(entry.getKey().getFirst(), new Tuple<>(entry.getKey().getSecond(), entry.getValue()));
+                } else if (map.get(entry.getKey().getFirst()).getSecond() < entry.getValue()) {
+                    map.put(entry.getKey().getFirst(), new Tuple<>(entry.getKey().getSecond(), entry.getValue()));
+                }
             }
         }
         return map;

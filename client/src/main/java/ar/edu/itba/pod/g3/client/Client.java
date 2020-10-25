@@ -33,16 +33,17 @@ import java.util.concurrent.ExecutionException;
 import static ar.edu.itba.pod.g3.client.util.PropertyParser.*;
 
 public class Client {
-    private static Logger logger = LoggerFactory.getLogger(Client.class);
-    private List<String> ipAddresses;
-    private String city;
-    private String inputDirectory;
-    private String outputDirectory;
-    private int query;
-    private String resultFilePath;
-    private String timeFilePath;
+    private static final Logger logger = LoggerFactory.getLogger(Client.class);
+    private final List<String> ipAddresses;
+    private final String city;
+    private final String inputDirectory;
+    private final String outputDirectory;
+    private final int query;
+    private final String resultFilePath;
+    private final String timeFilePath;
     private FileWriter timeFile;
     private BufferedWriter timeFileWriter;
+    private int min;
 
     //TODO: (A big one) the logic behind handling the properties parsing in another class makes the constructor
     // a Necessity. It would be ideal that all attributes are static so there are not as many parameters being
@@ -58,6 +59,17 @@ public class Client {
         this.timeFilePath = outputDirectory + "/time" + query + ".txt";
     }
 
+    public Client(String city, List<String> ipAddresses, String inputDirectory, String outputDirectory, int query, int min) throws InvalidPropertyException {
+        this.city = validateCity(city);
+        this.ipAddresses = ipAddresses;
+        this.inputDirectory = validateDirectory(inputDirectory, "inPath");
+        this.outputDirectory = validateDirectory(outputDirectory, "outPath");
+        this.query = query;
+        this.resultFilePath = outputDirectory + "/query" + query + ".csv";
+        this.timeFilePath = outputDirectory + "/time" + query + ".txt";
+        this.min = min;
+    }
+
     public static void main(String[] args) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
         logger.info("UrbanTreesInformation Client Starting ...");
         final Properties arguments = System.getProperties();
@@ -68,12 +80,13 @@ public class Client {
 
         Client client = maybeClient.get();
 
-        logger.info(String.format("Created client with City: %s and IP Addresses: %s\n Input File: %s, Output File: %s. Query=%d",
+        logger.info(String.format("Created client with City: %s and IP Addresses: %s\n Input File: %s, Output File: %s. Query=%d %s",
                 client.getCity(),
                 client.getIpAddresses().toString(),
                 client.getInputDirectory(),
                 client.getOutputDirectory(),
-                client.getQuery()
+                client.getQuery(),
+                client.getQuery() != 2? "":String.format("Min=%d", client.getMin())
                 ));
 
         final ClientConfig clientConfig = initializeConfig(client);
@@ -121,10 +134,10 @@ public class Client {
         ICompletableFuture<Map<String, Tuple<String, Integer>>> future = job
                 .mapper(new Query2Mapper())
                 .reducer(new Query2ReducerFactory())
-                .submit(new Query2Collator());
+                .submit(new Query2Collator(client.getMin()));
         result = future.get();
 
-        ResultWriter.writeQuery2Result(client.resultFilePath, result);
+        ResultWriter.writeQuery2Result(client.resultFilePath, result, client.getCity());
     }
 
     private static ClientConfig initializeConfig(final Client client) {
@@ -164,23 +177,7 @@ public class Client {
         return query;
     }
 
-    public static Logger getLogger() {
-        return logger;
-    }
-
-    public String getResultFilePath() {
-        return resultFilePath;
-    }
-
-    public String getTimeFilePath() {
-        return timeFilePath;
-    }
-
-    public FileWriter getTimeFile() {
-        return timeFile;
-    }
-
-    public BufferedWriter getTimeFileWriter() {
-        return timeFileWriter;
+    public int getMin() {
+        return min;
     }
 }
