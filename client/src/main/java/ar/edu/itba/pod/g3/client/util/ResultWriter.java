@@ -39,4 +39,18 @@ public class ResultWriter {
         });
         result2Writer.close();
     }
+
+    public static void writeQuery3Result(String resultFilePath, Map<String, Double> resultMap) throws IOException {
+        FileWriter result2File = new FileWriter(resultFilePath);
+        BufferedWriter result2Writer = new BufferedWriter(result2File);
+        result2Writer.write("NOMBRE_CIENTIFICO;PROMEDIO_DIAMETRO\n");
+        resultMap.forEach((key, value) -> {
+            try {
+                result2Writer.write(key + ";" + value + "\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        result2Writer.close();
+    }
 }

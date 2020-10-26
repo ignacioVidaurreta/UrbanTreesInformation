@@ -6,6 +6,9 @@ import ar.edu.itba.pod.g3.api.models.Tuple;
 import ar.edu.itba.pod.g3.api.query2.Query2Collator;
 import ar.edu.itba.pod.g3.api.query2.Query2Mapper;
 import ar.edu.itba.pod.g3.api.query2.Query2ReducerFactory;
+import ar.edu.itba.pod.g3.api.query3.Query3Collator;
+import ar.edu.itba.pod.g3.api.query3.Query3Mapper;
+import ar.edu.itba.pod.g3.api.query3.Query3ReducerFactory;
 import ar.edu.itba.pod.g3.client.csv.BUETreeCSVReader;
 import ar.edu.itba.pod.g3.client.csv.VANTreeCSVReader;
 import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
@@ -45,6 +48,7 @@ public class Client {
     private FileWriter timeFile;
     private BufferedWriter timeFileWriter;
     private int min;
+    private int n;
 
     //TODO: (A big one) the logic behind handling the properties parsing in another class makes the constructor
     // a Necessity. It would be ideal that all attributes are static so there are not as many parameters being
@@ -60,7 +64,7 @@ public class Client {
         this.timeFilePath = outputDirectory + "/time" + query + ".txt";
     }
 
-    public Client(String city, List<String> ipAddresses, String inputDirectory, String outputDirectory, int query, int min) throws InvalidPropertyException {
+    public Client(String city, List<String> ipAddresses, String inputDirectory, String outputDirectory, int query, int number) throws InvalidPropertyException {
         this.city = validateCity(city);
         this.ipAddresses = ipAddresses;
         this.inputDirectory = validateDirectory(inputDirectory, "inPath");
@@ -68,7 +72,10 @@ public class Client {
         this.query = query;
         this.resultFilePath = outputDirectory + "/query" + query + ".csv";
         this.timeFilePath = outputDirectory + "/time" + query + ".txt";
-        this.min = min;
+        if(this.query == 2)
+            this.min = number;
+        if(this.query == 3)
+            this.n = number;
     }
 
     public static void main(String[] args) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
@@ -87,7 +94,8 @@ public class Client {
                 client.getInputDirectory(),
                 client.getOutputDirectory(),
                 client.getQuery(),
-                client.getQuery() != 2? "":String.format("Min=%d", client.getMin())
+                client.getQuery() != 2? "":String.format("Min=%d", client.getMin()),
+                client.getQuery() != 3? "":String.format("N=%d", client.getN())
                 ));
 
         final ClientConfig clientConfig = initializeConfig(client);
@@ -127,10 +135,29 @@ public class Client {
             case 2:
                 streetWithMoreTreesByNeighborhood(hazelcastClient, client, treesList);
                 break;
+            case 3:
+                topNSpeciesWithBiggestDiameter(hazelcastClient, client, treesList);
+                break;
             default:
                 System.out.println("Not implemented");
         }
         ResultWriter.writeTime(client.timeFileWriter, "Fin del trabajo map/reduce");
+    }
+
+    private static void topNSpeciesWithBiggestDiameter(HazelcastInstance hazelcastClient, Client client, IList<TreeData> treesList) throws ExecutionException, InterruptedException, IOException {
+        final JobTracker jobTracker = hazelcastClient.getJobTracker("query-3");
+        final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
+
+        Job<String, TreeData> job = jobTracker.newJob(source);
+        Map<String, Double> result = null;
+
+        ICompletableFuture<Map<String, Double>> future = job
+                .mapper(new Query3Mapper())
+                .reducer(new Query3ReducerFactory())
+                .submit(new Query3Collator(client.getN()));
+        result = future.get();
+
+        ResultWriter.writeQuery3Result(client.resultFilePath, result);
     }
 
     private static void streetWithMoreTreesByNeighborhood(HazelcastInstance hazelcastClient, Client client, IList<TreeData> treesList) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
@@ -188,5 +215,9 @@ public class Client {
 
     public int getMin() {
         return min;
+    }
+
+    public int getN() {
+        return n;
     }
 }

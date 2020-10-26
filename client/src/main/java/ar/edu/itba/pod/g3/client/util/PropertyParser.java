@@ -21,6 +21,7 @@ public class PropertyParser {
             Optional<String> maybeOutPath = Optional.ofNullable(arguments.getProperty("outPath"));
             Optional<String> maybeQuery   = Optional.ofNullable(arguments.getProperty("query"));
             Optional<String> maybeMin = Optional.ofNullable(arguments.getProperty("min"));
+            Optional<String> maybeN = Optional.ofNullable(arguments.getProperty("n"));
 
             String city = maybeCity.orElseThrow(() -> new RequiredPropertyException("city"));
             String[] addresses = maybeAddresses.orElseThrow(
@@ -34,6 +35,10 @@ public class PropertyParser {
             if(Integer.parseInt(query) == 2)
                 min = maybeMin.orElseThrow( () -> new RequiredPropertyException("min"));
 
+            String n = null;
+            if(Integer.parseInt(query) == 3)
+                n = maybeN.orElseThrow( () -> new RequiredPropertyException("n"));
+
             //Query2
             if(Integer.parseInt(query) == 2 && min != null) {
                 return Optional.of(new Client(
@@ -43,6 +48,18 @@ public class PropertyParser {
                         outPath,
                         Integer.parseInt(query),
                         Integer.parseInt(min)
+                ));
+            }
+
+            //Query3
+            if(Integer.parseInt(query) == 3 && n != null) {
+                return Optional.of(new Client(
+                        city,
+                        Arrays.asList(addresses),
+                        inPath,
+                        outPath,
+                        Integer.parseInt(query),
+                        Integer.parseInt(n)
                 ));
             }
 
