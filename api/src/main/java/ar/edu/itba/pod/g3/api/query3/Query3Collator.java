@@ -10,16 +10,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class Query3Collator implements Collator<Map.Entry<String, Double>, Map<String, Double>> {
+public class Query3Collator implements Collator<Map.Entry<String, Double>, List<Map.Entry<String, Double>>> {
 
-    private int n;
+    private final int n;
 
     public Query3Collator(int n) {
         this.n = n;
     }
 
     @Override
-    public Map<String, Double> collate(Iterable<Map.Entry<String, Double>> values) {
+    public List<Map.Entry<String, Double>> collate(Iterable<Map.Entry<String, Double>> values) {
         Map<String, Double> map = new HashMap<>();
         for (Map.Entry<String, Double> entry : values) {
             map.put(entry.getKey(), entry.getValue());
@@ -32,6 +32,6 @@ public class Query3Collator implements Collator<Map.Entry<String, Double>, Map<S
             }
         }).collect(Collectors.toList());
 
-        return list.subList(0, n).stream().collect(Collectors.toMap(Map.Entry::getKey,Map.Entry::getValue));
+        return list.subList(0, n);
     }
 }

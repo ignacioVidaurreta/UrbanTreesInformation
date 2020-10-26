@@ -149,9 +149,9 @@ public class Client {
         final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
 
         Job<String, TreeData> job = jobTracker.newJob(source);
-        Map<String, Double> result = null;
+        List<Map.Entry<String, Double>> result = null;
 
-        ICompletableFuture<Map<String, Double>> future = job
+        ICompletableFuture<List<Map.Entry<String, Double>>> future = job
                 .mapper(new Query3Mapper())
                 .reducer(new Query3ReducerFactory())
                 .submit(new Query3Collator(client.getN()));
