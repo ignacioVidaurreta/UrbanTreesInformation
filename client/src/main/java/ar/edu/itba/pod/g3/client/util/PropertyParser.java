@@ -20,8 +20,6 @@ public class PropertyParser {
             Optional<String> maybeInPath = Optional.ofNullable(arguments.getProperty("inPath"));
             Optional<String> maybeOutPath = Optional.ofNullable(arguments.getProperty("outPath"));
             Optional<String> maybeQuery   = Optional.ofNullable(arguments.getProperty("query"));
-            Optional<String> maybeMin = Optional.ofNullable(arguments.getProperty("min"));
-            Optional<String> maybeN = Optional.ofNullable(arguments.getProperty("n"));
 
             String city = maybeCity.orElseThrow(() -> new RequiredPropertyException("city"));
             String[] addresses = maybeAddresses.orElseThrow(

@@ -84,14 +84,7 @@ public class Client {
         if (!hasQuerySpecificArgs)
             return;
 
-        logger.info(String.format("Created client with City: %s and IP Addresses: %s\n Input File: %s, Output File: %s. Query=%d",
-                client.getCity(),
-                client.getIpAddresses().toString(),
-                client.getInputDirectory(),
-                client.getOutputDirectory(),
-                client.getQuery()
-                ));
-
+        logger.info(String.format("Created client: %s", client.toString()));
         final ClientConfig clientConfig = initializeConfig(client);
         final HazelcastInstance hazelcastClient = HazelcastClient.newHazelcastClient(clientConfig);
         final IList<TreeData> treesList = hazelcastClient.getList("g3-trees");
@@ -270,4 +263,34 @@ public class Client {
     public void setN(String n) {
         this.n = Integer.parseInt(n);
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format(
+                "Client{query=%s; city=%s; ips=%s; inputDir=%s; outputDir=%s",
+                this.getQuery(), this.getCity(), this.getIpAddresses().toString(),
+                this.getInputDirectory(), this.getOutputDirectory())
+        );
+
+        switch (this.query){
+            case 1:
+                sb.append("}");
+                break;
+            case 2:
+                sb.append(String.format("; min=%d}", this.getMin()));
+                break;
+            case 3:
+                sb.append(String.format("; n=%d}", this.getN()));
+                break;
+            case 4:
+                sb.append(String.format("; min=%d; name=%s}", this.getMin(), this.getName()));
+                break;
+            case 5:
+                sb.append("}");
+                break;
+        }
+        return sb.toString();
+    }
+
 }
