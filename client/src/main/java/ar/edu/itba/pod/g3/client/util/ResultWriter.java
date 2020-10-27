@@ -40,7 +40,20 @@ public class ResultWriter {
                 e.printStackTrace();
             }
         });
+        result2Writer.close();
+    }
 
+    public static void writeQuery3Result(String resultFilePath, List<Map.Entry<String, Double>> resultList) throws IOException {
+        FileWriter result2File = new FileWriter(resultFilePath);
+        BufferedWriter result2Writer = new BufferedWriter(result2File);
+        result2Writer.write("NOMBRE_CIENTIFICO;PROMEDIO_DIAMETRO\n");
+        resultList.forEach(entry -> {
+            try {
+                result2Writer.write(entry.getKey() + ";" + String.format("%.2f", entry.getValue()) + "\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
         result2Writer.close();
     }
 
@@ -60,7 +73,7 @@ public class ResultWriter {
         IntStream.range(0, size).forEach((index -> {
             IntStream.range(index + 1 , size).forEach(index2 -> {
                 try {
-                    result2Writer.write(String.format("%s;%s\n",sorted_results.get(index).getKey(), sorted_results.get(index2)));
+                    result2Writer.write(String.format("%s;%s\n",sorted_results.get(index).getKey(), sorted_results.get(index2).getKey()));
                 }catch (IOException ex){
                     ex.printStackTrace();
                 }

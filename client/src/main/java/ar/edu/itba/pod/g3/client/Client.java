@@ -8,6 +8,9 @@ import ar.edu.itba.pod.g3.api.query2.Query2ReducerFactory;
 import ar.edu.itba.pod.g3.api.query4.Query4Collator;
 import ar.edu.itba.pod.g3.api.query4.Query4Mapper;
 import ar.edu.itba.pod.g3.api.query4.Query4ReducerFactory;
+import ar.edu.itba.pod.g3.api.query3.Query3Collator;
+import ar.edu.itba.pod.g3.api.query3.Query3Mapper;
+import ar.edu.itba.pod.g3.api.query3.Query3ReducerFactory;
 import ar.edu.itba.pod.g3.client.csv.BUETreeCSVReader;
 import ar.edu.itba.pod.g3.client.csv.VANTreeCSVReader;
 import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
@@ -18,7 +21,6 @@ import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.ClientNetworkConfig;
 import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
-
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.mapreduce.Job;
@@ -27,8 +29,6 @@ import com.hazelcast.mapreduce.KeyValueSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.xml.transform.Result;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -57,6 +57,8 @@ public class Client {
     // QUERY SPECIFIC ARGUMENTS
     private int min;
     private String name;
+    private int n;
+
 
     public Client(String city, List<String> ipAddresses, String inputDirectory, String outputDirectory, int query) throws InvalidPropertyException {
         this.city = validateCity(city);
@@ -66,7 +68,6 @@ public class Client {
         this.query = validateQuery(query);
         this.resultFilePath = outputDirectory + "/query" + query + ".csv";
         this.timeFilePath = outputDirectory + "/time" + query + ".txt";
-
     }
 
     public static void main(String[] args) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
@@ -83,14 +84,13 @@ public class Client {
         if (!hasQuerySpecificArgs)
             return;
 
-        logger.info(String.format("Created client with City: %s and IP Addresses: %s\n Input File: %s, Output File: %s. Query=%d %s",
+        logger.info(String.format("Created client with City: %s and IP Addresses: %s\n Input File: %s, Output File: %s. Query=%d",
                 client.getCity(),
                 client.getIpAddresses().toString(),
                 client.getInputDirectory(),
                 client.getOutputDirectory(),
-                client.getQuery(),
-                client.getQuery() != 2 ? "" : String.format("Min=%d", client.getMin())
-        ));
+                client.getQuery()
+                ));
 
         final ClientConfig clientConfig = initializeConfig(client);
         final HazelcastInstance hazelcastClient = HazelcastClient.newHazelcastClient(clientConfig);
@@ -128,6 +128,9 @@ public class Client {
             //TODO Implement other cases
             case 2:
                 streetWithMoreTreesByNeighborhood(hazelcastClient, treesList);
+                break;
+            case 3:
+                topNSpeciesWithBiggestDiameter(hazelcastClient, treesList);
                 break;
             case 4:
                 runMinTreeQuery(hazelcastClient);
@@ -180,6 +183,22 @@ public class Client {
         ResultWriter.writeQuery2Result(this.resultFilePath, result, this.getCity());
     }
 
+    private void topNSpeciesWithBiggestDiameter(HazelcastInstance hazelcastClient, IList<TreeData> treesList) throws ExecutionException, InterruptedException, IOException {
+        final JobTracker jobTracker = hazelcastClient.getJobTracker("query-3");
+        final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
+
+        Job<String, TreeData> job = jobTracker.newJob(source);
+        List<Map.Entry<String, Double>> result = null;
+
+        ICompletableFuture<List<Map.Entry<String, Double>>> future = job
+                .mapper(new Query3Mapper())
+                .reducer(new Query3ReducerFactory())
+                .submit(new Query3Collator(this.getN()));
+        result = future.get();
+
+        ResultWriter.writeQuery3Result(this.resultFilePath, result);
+    }
+
     private static ClientConfig initializeConfig(final Client client) {
         final ClientConfig clientConfig = new ClientConfig();
         clientConfig.setGroupConfig(new GroupConfig("g3", "n4ch170c4p0"));
@@ -207,7 +226,6 @@ public class Client {
     static String buildBUETreesCSVPath(Client client) {
         return String.format("%s/arbolesBUE.csv", client.getInputDirectory());
     }
-
 
     public String getInputDirectory() {
         return inputDirectory;
@@ -245,4 +263,11 @@ public class Client {
         this.name = name;
     }
 
+    public int getN() {
+        return n;
+    }
+
+    public void setN(String n) {
+        this.n = Integer.parseInt(n);
+    }
 }

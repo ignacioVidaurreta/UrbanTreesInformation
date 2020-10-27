@@ -6,8 +6,6 @@ import com.opencsv.CSVReader;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -28,7 +26,6 @@ public class VANTreeCSVReader {
 
     }
 
-
     public static void readCsv(Consumer<TreeData> dataConsumer, String path, Predicate<TreeData> condition) throws IOException, MalformedCSVException {
         CSVReader reader = new CSVReader(new FileReader(path), ';');
         // discard header
@@ -41,7 +38,6 @@ public class VANTreeCSVReader {
         }
 
     }
-
 
     private static TreeData parseLine(String[] line) throws MalformedCSVException {
         if (line.length != 19)
