@@ -1,4 +1,4 @@
-package ar.edu.itba.pod.g3.client;
+package ar.edu.itba.pod.g3.api.models;
 
 import java.io.Serializable;
 

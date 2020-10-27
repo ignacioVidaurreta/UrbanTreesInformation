@@ -1,14 +1,16 @@
 package ar.edu.itba.pod.g3.client.csv;
 
-import ar.edu.itba.pod.g3.client.TreeData;
+import ar.edu.itba.pod.g3.api.models.TreeData;
 import ar.edu.itba.pod.g3.client.exceptions.MalformedCSVException;
 import com.opencsv.CSVReader;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Optional;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
 
 /**
  * Parses the data from Vancouver Tree Data
@@ -26,6 +28,7 @@ public class VANTreeCSVReader {
 
     }
 
+
     public static void readCsv(Consumer<TreeData> dataConsumer, String path, Predicate<TreeData> condition) throws IOException, MalformedCSVException {
         CSVReader reader = new CSVReader(new FileReader(path), ';');
         // discard header
@@ -38,6 +41,7 @@ public class VANTreeCSVReader {
         }
 
     }
+
 
     private static TreeData parseLine(String[] line) throws MalformedCSVException {
         if (line.length != 19)

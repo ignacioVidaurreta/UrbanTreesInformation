@@ -29,12 +29,13 @@ public class PropertyParser {
             String outPath = maybeOutPath.orElseThrow(() -> new RequiredPropertyException("outPath"));
             String query   = maybeQuery.orElseThrow( () -> new RequiredPropertyException("query"));
 
+
             return Optional.of(new Client(
                     city,
                     Arrays.asList(addresses),
                     inPath,
                     outPath,
-                    Integer.valueOf(query)
+                    Integer.parseInt(query)
 
             ));
         }catch (RequiredPropertyException | InvalidPropertyException ex){
@@ -49,6 +50,9 @@ public class PropertyParser {
             switch (client.getQuery()) {
                 case 1:
                 case 2:
+                    Optional<String> maybeMinQ2 = Optional.ofNullable(arguments.getProperty("min"));
+                    client.setMin(maybeMinQ2.orElseThrow(() -> new RequiredPropertyException("min")));
+                    break;
                 case 3:
                     break;
                 case 4:
