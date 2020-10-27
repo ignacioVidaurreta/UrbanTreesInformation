@@ -62,6 +62,7 @@ public class PropertyParser {
 
                     client.setMin(maybeMin.orElseThrow(() -> new RequiredPropertyException("min")));
                     client.setName(maybeName.orElseThrow(()-> new RequiredPropertyException("name")));
+                    break;
 
             }
         }catch (RequiredPropertyException rex){

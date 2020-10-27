@@ -60,7 +60,7 @@ public class ResultWriter {
     public static void writeQuery4Result(String resultFilePath, Map<String, Integer> result) throws IOException{
         FileWriter result2File = new FileWriter(resultFilePath);
         BufferedWriter result2Writer = new BufferedWriter(result2File);
-        result2Writer.write("BARIO A; BARRIO B\n");
+        result2Writer.write("Barrio A;Barrio B\n");
         int size = result.size();
 
         List<Map.Entry<String, Integer>> sorted_results = result.entrySet().stream().sorted(new Comparator<Map.Entry<String, Integer>>() {
