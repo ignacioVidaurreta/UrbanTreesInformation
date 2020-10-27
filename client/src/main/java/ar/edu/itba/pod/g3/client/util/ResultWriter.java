@@ -22,15 +22,13 @@ public class ResultWriter {
         outputFileWriter.write(currentTime + "\tINFO [main] Client -" + "\t" + message + "\n"); //TODO: include class and line like assigment example shows
     }
 
-    public static void writeQuery2Result(String resultFilePath, Map<String, Tuple<String, Integer>> resultMap, String city) throws IOException {
+    public static void writeQuery2Result(String resultFilePath, Map<String, Tuple<String, Integer>> resultMap) throws IOException {
         FileWriter result2File = new FileWriter(resultFilePath);
         BufferedWriter result2Writer = new BufferedWriter(result2File);
         result2Writer.write("BARRIO;CALLE_CON_MAS_ARBOLES;ARBOLES\n");
         resultMap.entrySet().stream().sorted(new Comparator<Map.Entry<String, Tuple<String, Integer>>>() {
             @Override
             public int compare(Map.Entry<String, Tuple<String, Integer>> o1, Map.Entry<String, Tuple<String, Integer>> o2) {
-                if(city.equals("BUE"))
-                    return Integer.valueOf(o1.getKey()).compareTo(Integer.valueOf(o2.getKey()));
                 return o1.getKey().compareTo(o2.getKey());
             }
         }).forEach((entry) -> {

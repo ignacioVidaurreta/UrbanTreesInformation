@@ -166,7 +166,7 @@ public class Client {
                 .submit(new Query2Collator(this.getMin()));
         result = future.get();
 
-        ResultWriter.writeQuery2Result(this.resultFilePath, result, this.getCity());
+        ResultWriter.writeQuery2Result(this.resultFilePath, result);
     }
 
     private void topNSpeciesWithBiggestDiameter(HazelcastInstance hazelcastClient, IList<TreeData> treesList) throws ExecutionException, InterruptedException, IOException {
