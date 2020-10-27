@@ -9,7 +9,10 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class ResultWriter {
 
@@ -37,6 +40,7 @@ public class ResultWriter {
                 e.printStackTrace();
             }
         });
+
         result2Writer.close();
     }
 
@@ -44,18 +48,24 @@ public class ResultWriter {
         FileWriter result2File = new FileWriter("/tmp/data/hello.csv");
         BufferedWriter result2Writer = new BufferedWriter(result2File);
         result2Writer.write("BARIO A; BARRIO B\n");
-        result.entrySet().stream().sorted(new Comparator<Map.Entry<String, Integer>>() {
+        int size = result.size();
+
+        List<Map.Entry<String, Integer>> sorted_results = result.entrySet().stream().sorted(new Comparator<Map.Entry<String, Integer>>() {
             @Override
             public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
                 return o1.getKey().compareTo(o2.getKey());
             }
-        }).forEach((entry) -> {
-            try {
-                result2Writer.write(entry.getKey() + ";" + entry.getValue()+ "\n");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+        }).collect(Collectors.toList());
+
+        IntStream.range(0, size).forEach((index -> {
+            IntStream.range(index + 1 , size).forEach(index2 -> {
+                try {
+                    result2Writer.write(String.format("%s;%s\n",sorted_results.get(index).getKey(), sorted_results.get(index2)));
+                }catch (IOException ex){
+                    ex.printStackTrace();
+                }
+            });
+        }));
         result2Writer.close();
     }
 }
