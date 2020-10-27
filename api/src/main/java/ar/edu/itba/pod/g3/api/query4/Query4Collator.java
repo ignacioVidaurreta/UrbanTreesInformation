@@ -14,21 +14,6 @@ public class Query4Collator implements Collator<Map.Entry<String, Integer>, Map<
         this.min = min;
     }
 
-    /*@Override
-    public Tuple<String, String> collate(Iterable<Map.Entry<Tuple<String, String>, Integer>> values) {
-        Map<String, Tuple<String, Integer>> map = new HashMap<>();
-        for (Map.Entry<Tuple<String, String>, Integer> entry : values) {
-            if(entry.getValue() > this.min) {
-                if (!map.containsKey(entry.getKey().getFirst())) {
-                    map.put(entry.getKey().getFirst(), new Tuple<>(entry.getKey().getSecond(), entry.getValue()));
-                } else if (map.get(entry.getKey().getFirst()).getSecond() < entry.getValue()) {
-                    map.put(entry.getKey().getFirst(), new Tuple<>(entry.getKey().getSecond(), entry.getValue()));
-                }
-            }
-        }
-        return map;
-    }*/
-
     @Override
     public Map<String, Integer> collate(Iterable<Map.Entry<String, Integer>> iterable) {
         Map<String, Integer> map = new HashMap<>();

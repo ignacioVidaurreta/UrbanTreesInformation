@@ -126,7 +126,7 @@ public class Client {
                 topNSpeciesWithBiggestDiameter(hazelcastClient, treesList);
                 break;
             case 4:
-                runMinTreeQuery(hazelcastClient);
+                runMinTreeQuery(hazelcastClient, treesList);
                 break;
             default:
                 System.out.println("Not implemented");
@@ -134,27 +134,20 @@ public class Client {
         ResultWriter.writeTime(this.timeFileWriter, "Fin del trabajo map/reduce");
     }
 
-    private void runMinTreeQuery(HazelcastInstance hazelcastClient) throws InterruptedException, ExecutionException {
-        IList<TreeData> treeDataList = hazelcastClient.getList("g3-treeData");
+    private void runMinTreeQuery(HazelcastInstance hazelcastClient, IList<TreeData> treesList) throws InterruptedException, ExecutionException {
         try {
-            if( this.city.equals("BUE"))
-                BUETreeCSVReader.readCsv(treeDataList::add, buildBUETreesCSVPath(this), (TreeData data) -> data.getScientificName().equals(this.name));
-            else
-                VANTreeCSVReader.readCsv(treeDataList::add, buildVANTreesCSVPath(this), (TreeData data) -> data.getScientificName().equals(this.name.toUpperCase()));
-
             final JobTracker jobTracker = hazelcastClient.getJobTracker("query-4");
-            final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treeDataList);
+            final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
             Job<String, TreeData> job = jobTracker.newJob(source);
             Map<String, Integer> result = null;
-            System.out.println("OH hi...");
             ICompletableFuture<Map<String, Integer>> future = job
-                    .mapper(new Query4Mapper())
+                    .mapper(new Query4Mapper(this.getName()))
                     .reducer(new Query4ReducerFactory())
                     .submit(new Query4Collator(this.getMin()));
 
             result = future.get();
             ResultWriter.writeQuery4Result(result);
-        } catch (MalformedCSVException | IOException ex) {
+        } catch (IOException ex) {
             logger.error(String.format("Parsing error: %s", ex.getMessage()));
         }
     }
@@ -208,16 +201,6 @@ public class Client {
     /* package */
     static String buildTreesCSVPath(Client client) {
         return String.format("%s/arboles%s.csv", client.getInputDirectory(), client.getCity());
-    }
-
-    /* package */
-    static String buildVANTreesCSVPath(Client client) {
-        return String.format("%s/arbolesVAN.csv", client.getInputDirectory());
-    }
-
-    /* package */
-    static String buildBUETreesCSVPath(Client client) {
-        return String.format("%s/arbolesBUE.csv", client.getInputDirectory());
     }
 
     public String getInputDirectory() {
@@ -274,9 +257,6 @@ public class Client {
         );
 
         switch (this.query){
-            case 1:
-                sb.append("}");
-                break;
             case 2:
                 sb.append(String.format("; min=%d}", this.getMin()));
                 break;
@@ -286,6 +266,7 @@ public class Client {
             case 4:
                 sb.append(String.format("; min=%d; name=%s}", this.getMin(), this.getName()));
                 break;
+            case 1:
             case 5:
                 sb.append("}");
                 break;

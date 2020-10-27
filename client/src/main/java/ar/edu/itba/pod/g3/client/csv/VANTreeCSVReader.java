@@ -26,19 +26,6 @@ public class VANTreeCSVReader {
 
     }
 
-    public static void readCsv(Consumer<TreeData> dataConsumer, String path, Predicate<TreeData> condition) throws IOException, MalformedCSVException {
-        CSVReader reader = new CSVReader(new FileReader(path), ';');
-        // discard header
-        reader.readNext();
-        String[] line;
-        while ((line = reader.readNext()) != null) {
-            TreeData treeData = parseLine(line);
-            if(condition.test(treeData))
-                dataConsumer.accept(treeData);
-        }
-
-    }
-
     private static TreeData parseLine(String[] line) throws MalformedCSVException {
         if (line.length != 19)
             throw new MalformedCSVException();

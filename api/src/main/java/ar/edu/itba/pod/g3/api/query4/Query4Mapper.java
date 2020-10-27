@@ -8,10 +8,15 @@ import com.hazelcast.mapreduce.Mapper;
 
 public class Query4Mapper implements Mapper<String, TreeData, String, Integer> {
 
+    private String name;
+    public Query4Mapper(String name){
+        this.name = name;
+    }
     private static final Integer ONE = 1;
 
     @Override
     public void map(String key, TreeData treeData, Context<String, Integer> context) {
-        context.emit(treeData.getNeighbourhood(), ONE);
+        if(treeData.getScientificName().toUpperCase().equals(name.toUpperCase()))
+            context.emit(treeData.getNeighbourhood(), ONE);
     }
 }

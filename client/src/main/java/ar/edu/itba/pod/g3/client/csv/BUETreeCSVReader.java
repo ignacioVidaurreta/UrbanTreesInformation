@@ -27,20 +27,6 @@ public class BUETreeCSVReader{
 
     }
 
-    public static void readCsv(Consumer<TreeData> dataConsumer, String path, Predicate<TreeData> condition) throws IOException, MalformedCSVException {
-        CSVReader reader = new CSVReader(new FileReader(path), ';');
-        // discard header
-        reader.readNext();
-        String[] line;
-        while ((line = reader.readNext()) != null) {
-            TreeData treeData = parseLine(line);
-            if(condition.test(treeData))
-                dataConsumer.accept(treeData);
-        }
-
-
-    }
-
     protected static TreeData parseLine(String[] line) throws MalformedCSVException {
         if (line.length != 13)
             throw new MalformedCSVException();
