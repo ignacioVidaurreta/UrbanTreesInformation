@@ -7,6 +7,8 @@ import com.opencsv.CSVReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+
 
 /**
  * Parses the data from Buenos Aires Tree Data
@@ -24,7 +26,6 @@ public class BUETreeCSVReader{
         }
 
     }
-
 
     protected static TreeData parseLine(String[] line) throws MalformedCSVException {
         if (line.length != 13)

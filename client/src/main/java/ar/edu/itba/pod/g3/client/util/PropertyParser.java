@@ -20,8 +20,6 @@ public class PropertyParser {
             Optional<String> maybeInPath = Optional.ofNullable(arguments.getProperty("inPath"));
             Optional<String> maybeOutPath = Optional.ofNullable(arguments.getProperty("outPath"));
             Optional<String> maybeQuery   = Optional.ofNullable(arguments.getProperty("query"));
-            Optional<String> maybeMin = Optional.ofNullable(arguments.getProperty("min"));
-            Optional<String> maybeN = Optional.ofNullable(arguments.getProperty("n"));
 
             String city = maybeCity.orElseThrow(() -> new RequiredPropertyException("city"));
             String[] addresses = maybeAddresses.orElseThrow(
@@ -30,38 +28,6 @@ public class PropertyParser {
             String inPath = maybeInPath.orElseThrow(() -> new RequiredPropertyException("inPath"));
             String outPath = maybeOutPath.orElseThrow(() -> new RequiredPropertyException("outPath"));
             String query   = maybeQuery.orElseThrow( () -> new RequiredPropertyException("query"));
-
-            String min = null;
-            if(Integer.parseInt(query) == 2)
-                min = maybeMin.orElseThrow( () -> new RequiredPropertyException("min"));
-
-            String n = null;
-            if(Integer.parseInt(query) == 3)
-                n = maybeN.orElseThrow( () -> new RequiredPropertyException("n"));
-
-            //Query2
-            if(Integer.parseInt(query) == 2 && min != null) {
-                return Optional.of(new Client(
-                        city,
-                        Arrays.asList(addresses),
-                        inPath,
-                        outPath,
-                        Integer.parseInt(query),
-                        Integer.parseInt(min)
-                ));
-            }
-
-            //Query3
-            if(Integer.parseInt(query) == 3 && n != null) {
-                return Optional.of(new Client(
-                        city,
-                        Arrays.asList(addresses),
-                        inPath,
-                        outPath,
-                        Integer.parseInt(query),
-                        Integer.parseInt(n)
-                ));
-            }
 
             return Optional.of(new Client(
                     city,
@@ -78,6 +44,34 @@ public class PropertyParser {
         }
     }
 
+    public static boolean setQuerySpecificArguments(Properties arguments, Client client){
+        try {
+            switch (client.getQuery()) {
+                case 1:
+                case 2:
+                    Optional<String> maybeMinQ2 = Optional.ofNullable(arguments.getProperty("min"));
+                    client.setMin(maybeMinQ2.orElseThrow(() -> new RequiredPropertyException("min")));
+                    break;
+                case 3:
+                    Optional<String> maybeN = Optional.ofNullable(arguments.getProperty("n"));
+                    client.setN(maybeN.orElseThrow(() -> new RequiredPropertyException("n")));
+                    break;
+                case 4:
+                    Optional<String> maybeMin = Optional.ofNullable(arguments.getProperty("min"));
+                    Optional<String> maybeName = Optional.ofNullable(arguments.getProperty("name"));
+
+                    client.setMin(maybeMin.orElseThrow(() -> new RequiredPropertyException("min")));
+                    client.setName(maybeName.orElseThrow(()-> new RequiredPropertyException("name")));
+                    break;
+
+            }
+        }catch (RequiredPropertyException rex){
+            logger.error(String.format("Missing required argument for query %d, %s", client.getQuery(), rex.getMessage()));
+            return false;
+        }
+        return true;
+    }
+
     public static String validateCity(String city) throws InvalidPropertyException {
         Set<String> validCities = new HashSet<>(Arrays.asList("BUE", "VAN"));
         if (!validCities.contains(city))
@@ -91,6 +85,13 @@ public class PropertyParser {
             throw new InvalidPropertyException(path, property);
 
         return path;
+    }
+
+    public static int validateQuery(int query) throws InvalidPropertyException{
+        if(query < 1 || query > 5)
+            throw new InvalidPropertyException("Query must be a number between 1 and 5");
+
+        return query;
     }
 
 }

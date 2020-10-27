@@ -5,4 +5,8 @@ public class InvalidPropertyException extends Exception {
         super(String.format("%s is not a valid value for %s", invalidValue, property));
     }
 
+    public InvalidPropertyException(String message){
+        super(message);
+    }
+
 }
