@@ -154,35 +154,43 @@ public class Client {
 
 
     private void streetWithMoreTreesByNeighborhood(HazelcastInstance hazelcastClient, IList<TreeData> treesList) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
-        final JobTracker jobTracker = hazelcastClient.getJobTracker("query-2");
-        final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
+        try {
+            final JobTracker jobTracker = hazelcastClient.getJobTracker("query-2");
+            final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
 
-        Job<String, TreeData> job = jobTracker.newJob(source);
-        Map<String, Tuple<String, Integer>> result = null;
+            Job<String, TreeData> job = jobTracker.newJob(source);
+            Map<String, Tuple<String, Integer>> result = null;
 
-        ICompletableFuture<Map<String, Tuple<String, Integer>>> future = job
-                .mapper(new Query2Mapper())
-                .reducer(new Query2ReducerFactory())
-                .submit(new Query2Collator(this.getMin()));
-        result = future.get();
+            ICompletableFuture<Map<String, Tuple<String, Integer>>> future = job
+                    .mapper(new Query2Mapper())
+                    .reducer(new Query2ReducerFactory())
+                    .submit(new Query2Collator(this.getMin()));
+            result = future.get();
 
-        ResultWriter.writeQuery2Result(this.resultFilePath, result);
+            ResultWriter.writeQuery2Result(this.resultFilePath, result);
+        } catch  (IOException ex) {
+            logger.error(String.format("Parsing error: %s", ex.getMessage()));
+        }
     }
 
     private void topNSpeciesWithBiggestDiameter(HazelcastInstance hazelcastClient, IList<TreeData> treesList) throws ExecutionException, InterruptedException, IOException {
-        final JobTracker jobTracker = hazelcastClient.getJobTracker("query-3");
-        final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
+        try {
+            final JobTracker jobTracker = hazelcastClient.getJobTracker("query-3");
+            final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
 
-        Job<String, TreeData> job = jobTracker.newJob(source);
-        List<Map.Entry<String, Double>> result = null;
+            Job<String, TreeData> job = jobTracker.newJob(source);
+            List<Map.Entry<String, Double>> result = null;
 
-        ICompletableFuture<List<Map.Entry<String, Double>>> future = job
-                .mapper(new Query3Mapper())
-                .reducer(new Query3ReducerFactory())
-                .submit(new Query3Collator(this.getN()));
-        result = future.get();
+            ICompletableFuture<List<Map.Entry<String, Double>>> future = job
+                    .mapper(new Query3Mapper())
+                    .reducer(new Query3ReducerFactory())
+                    .submit(new Query3Collator(this.getN()));
+            result = future.get();
 
-        ResultWriter.writeQuery3Result(this.resultFilePath, result);
+            ResultWriter.writeQuery3Result(this.resultFilePath, result);
+        } catch  (IOException ex) {
+            logger.error(String.format("Parsing error: %s", ex.getMessage()));
+        }
     }
 
     private static ClientConfig initializeConfig(final Client client) {
