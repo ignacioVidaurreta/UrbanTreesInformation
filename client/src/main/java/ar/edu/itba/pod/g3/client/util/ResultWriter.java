@@ -69,10 +69,10 @@ public class ResultWriter {
         }).collect(Collectors.toList());
 
         IntStream.range(0, size).forEach((index -> {
-            IntStream.range(index + 1 , size).forEach(index2 -> {
+            IntStream.range(index + 1, size).forEach(index2 -> {
                 try {
-                    result2Writer.write(String.format("%s;%s\n",sorted_results.get(index).getKey(), sorted_results.get(index2).getKey()));
-                }catch (IOException ex){
+                    result2Writer.write(String.format("%s;%s\n", sorted_results.get(index).getKey(), sorted_results.get(index2).getKey()));
+                } catch (IOException ex) {
                     ex.printStackTrace();
                 }
             });
@@ -95,10 +95,25 @@ public class ResultWriter {
                         }
                     }
                 }
+                result5Writer.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         });
-        result5Writer.close();
+    }
+
+    public static void writeQuery1Result(String resultFilePath, Map<String, Double> resultMap) throws IOException {
+        System.out.println("writing result");
+        FileWriter result1File = new FileWriter(resultFilePath);
+        BufferedWriter result1Writer = new BufferedWriter(result1File);
+        result1Writer.write("BARRIO;ARBOLES_POR_HABITANTE\n");
+        resultMap.forEach((key, value) -> {
+            try {
+                result1Writer.write(key + ";" + String.format("%.2f", value) + "\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        result1Writer.close();
     }
 }

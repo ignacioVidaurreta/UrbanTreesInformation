@@ -2,6 +2,9 @@ package ar.edu.itba.pod.g3.client;
 
 import ar.edu.itba.pod.g3.api.models.TreeData;
 import ar.edu.itba.pod.g3.api.models.Tuple;
+import ar.edu.itba.pod.g3.api.query1.Query1Collator;
+import ar.edu.itba.pod.g3.api.query1.Query1Mapper;
+import ar.edu.itba.pod.g3.api.query1.Query1ReducerFactory;
 import ar.edu.itba.pod.g3.api.query2.Query2Collator;
 import ar.edu.itba.pod.g3.api.query2.Query2Mapper;
 import ar.edu.itba.pod.g3.api.query2.Query2ReducerFactory;
@@ -15,6 +18,7 @@ import ar.edu.itba.pod.g3.api.query5.Query5Collator;
 import ar.edu.itba.pod.g3.api.query5.Query5Mapper;
 import ar.edu.itba.pod.g3.api.query5.Query5ReducerFactory;
 import ar.edu.itba.pod.g3.client.csv.BUETreeCSVReader;
+import ar.edu.itba.pod.g3.client.csv.NeighbourhoodCSVReader;
 import ar.edu.itba.pod.g3.client.csv.VANTreeCSVReader;
 import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
 import ar.edu.itba.pod.g3.client.exceptions.MalformedCSVException;
@@ -26,6 +30,7 @@ import com.hazelcast.config.GroupConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IList;
 import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.core.IMap;
 import com.hazelcast.mapreduce.Job;
 import com.hazelcast.mapreduce.JobTracker;
 import com.hazelcast.mapreduce.KeyValueSource;
@@ -91,20 +96,22 @@ public class Client {
         final ClientConfig clientConfig = initializeConfig(client);
         final HazelcastInstance hazelcastClient = HazelcastClient.newHazelcastClient(clientConfig);
         final IList<TreeData> treesList = hazelcastClient.getList("g3-trees");
-        setUpOutput(client, treesList);
-        client.solveQuery(hazelcastClient, treesList);
+        final IMap<String, Integer> neighbourhoodData = hazelcastClient.getMap("g3-neighbourhoods");
+        setUpOutput(client, treesList, client.getQuery(), neighbourhoodData);
+        client.solveQuery(hazelcastClient, treesList, neighbourhoodData);
         client.timeFileWriter.close();
 
         logger.info("Client shutting down...");
         hazelcastClient.shutdown();
     }
 
-    private static void setUpOutput(Client client, IList<TreeData> treesList) throws IOException, MalformedCSVException {
+    private static void setUpOutput(Client client, IList<TreeData> treesList, int query, IMap<String, Integer> neighbourhoodData) throws IOException, MalformedCSVException {
         // Time file
         client.timeFile = new FileWriter(client.timeFilePath);
         client.timeFileWriter = new BufferedWriter(client.timeFile);
         // Clear list
         treesList.clear();
+        neighbourhoodData.clear();
         // Load info
         ResultWriter.writeTime(client.timeFileWriter, "Inicio de la lectura del archivo");
 
@@ -113,15 +120,25 @@ public class Client {
         } else if (client.getCity().equals("VAN")) {
             VANTreeCSVReader.readCsv(treesList::add, buildTreesCSVPath(client));
         }
+        if (query == 1) {
+            NeighbourhoodCSVReader.readCsv(neighbourhoodData::put, buildNeighbourhoodCSVPath(client));
+        }
 
         ResultWriter.writeTime(client.timeFileWriter, "Fin de lectura del archivo");
     }
 
-    private void solveQuery(HazelcastInstance hazelcastClient, IList<TreeData> treesList) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
+
+    private void solveQuery(
+            HazelcastInstance hazelcastClient,
+            IList<TreeData> treesList,
+            IMap<String, Integer> neighbourhoodData) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
         ResultWriter.writeTime(this.timeFileWriter, "Inicio del trabajo map/reduce");
 
         switch (this.getQuery()) {
             //TODO Implement other cases
+            case 1:
+                totalTreesByInhabitants(hazelcastClient, treesList, neighbourhoodData);
+                break;
             case 2:
                 streetWithMoreTreesByNeighborhood(hazelcastClient, treesList);
                 break;
@@ -158,6 +175,22 @@ public class Client {
         }
     }
 
+    private void totalTreesByInhabitants(
+            HazelcastInstance hazelcastClient,
+            IList<TreeData> treesList,
+            IMap<String, Integer> neighbourhoodData) throws ExecutionException, InterruptedException, IOException {
+        JobTracker jobTracker = hazelcastClient.getJobTracker("query-1");
+        KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
+
+        Job<String, TreeData> job = jobTracker.newJob(source);
+        Map<String, Double> result = null;
+        ICompletableFuture<Map<String, Double>> future = job
+                .mapper (new Query1Mapper(neighbourhoodData))
+                .reducer(new Query1ReducerFactory())
+                .submit (new Query1Collator(neighbourhoodData));
+        result = future.get();
+        ResultWriter.writeQuery1Result(this.resultFilePath, result);
+    }
 
     private void streetWithMoreTreesByNeighborhood(HazelcastInstance hazelcastClient, IList<TreeData> treesList) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
         try {
