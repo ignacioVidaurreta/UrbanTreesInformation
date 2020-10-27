@@ -57,8 +57,8 @@ public class ResultWriter {
         result2Writer.close();
     }
 
-    public static void writeQuery4Result(Map<String, Integer> result) throws IOException{
-        FileWriter result2File = new FileWriter("/tmp/data/hello.csv");
+    public static void writeQuery4Result(String resultFilePath, Map<String, Integer> result) throws IOException{
+        FileWriter result2File = new FileWriter(resultFilePath);
         BufferedWriter result2Writer = new BufferedWriter(result2File);
         result2Writer.write("BARIO A; BARRIO B\n");
         int size = result.size();

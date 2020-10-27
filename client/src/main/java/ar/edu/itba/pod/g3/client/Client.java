@@ -146,7 +146,7 @@ public class Client {
                     .submit(new Query4Collator(this.getMin()));
 
             result = future.get();
-            ResultWriter.writeQuery4Result(result);
+            ResultWriter.writeQuery4Result(this.resultFilePath, result);
         } catch (IOException ex) {
             logger.error(String.format("Parsing error: %s", ex.getMessage()));
         }
