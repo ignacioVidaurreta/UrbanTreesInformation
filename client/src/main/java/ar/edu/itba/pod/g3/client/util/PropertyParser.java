@@ -34,13 +34,11 @@ public class PropertyParser {
                     Arrays.asList(addresses),
                     inPath,
                     outPath,
-                    Integer.parseInt(query)
-
-            ));
-        }catch (RequiredPropertyException | InvalidPropertyException ex){
+                    Integer.parseInt(query))
+            );
+        } catch (RequiredPropertyException | InvalidPropertyException ex) {
             logger.error(String.format("Error when parsing arguments: %s", ex.getMessage()));
             return Optional.empty();
-
         }
     }
 
@@ -63,9 +61,13 @@ public class PropertyParser {
                     client.setMin(maybeMin.orElseThrow(() -> new RequiredPropertyException("min")));
                     client.setName(maybeName.orElseThrow(()-> new RequiredPropertyException("name")));
                     break;
-
+                case 5:
+                    // this query requires no specific arguments as of today
+                    break;
+                default:
+                    throw new IllegalArgumentException("Expected query to be 1, 2, 3, 4 or 5.\n");
             }
-        }catch (RequiredPropertyException rex){
+        } catch (RequiredPropertyException rex) {
             logger.error(String.format("Missing required argument for query %d, %s", client.getQuery(), rex.getMessage()));
             return false;
         }
@@ -81,7 +83,7 @@ public class PropertyParser {
 
     public static String validateDirectory(String path, String property) throws InvalidPropertyException{
         Path filePath = Paths.get(path);
-        if(! Files.exists(filePath))
+        if (! Files.exists(filePath))
             throw new InvalidPropertyException(path, property);
 
         return path;

@@ -55,7 +55,7 @@ public class ResultWriter {
         result2Writer.close();
     }
 
-    public static void writeQuery4Result(String resultFilePath, Map<String, Integer> result) throws IOException{
+    public static void writeQuery4Result(String resultFilePath, Map<String, Integer> result) throws IOException {
         FileWriter result2File = new FileWriter(resultFilePath);
         BufferedWriter result2Writer = new BufferedWriter(result2File);
         result2Writer.write("Barrio A;Barrio B\n");
@@ -78,5 +78,27 @@ public class ResultWriter {
             });
         }));
         result2Writer.close();
+    }
+
+    public static void writeQuery5Result(String resultFilePath, Map<Integer, List<String>> resultMap) throws IOException {
+        FileWriter result5File = new FileWriter(resultFilePath);
+        BufferedWriter result5Writer = new BufferedWriter(result5File);
+        result5Writer.write("Grupo;Barrio A;Barrio B\n");
+        resultMap.entrySet().stream().sorted((entry1, entry2) -> entry2.getKey() - entry1.getKey()).forEach((entry) -> {
+            try {
+                List<String> neighborhoods = entry.getValue();
+                if (neighborhoods.size() > 1) {
+                    neighborhoods.sort(String::compareTo);
+                    for (int i = 0; i < neighborhoods.size() - 1; i++) {
+                        for (int j = i + 1; j < neighborhoods.size(); j++) {
+                            result5Writer.write((entry.getKey() * 1000) + ";" + neighborhoods.get(i) + ";" + neighborhoods.get(j) + "\n");
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        result5Writer.close();
     }
 }

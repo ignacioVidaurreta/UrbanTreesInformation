@@ -11,6 +11,9 @@ import ar.edu.itba.pod.g3.api.query4.Query4ReducerFactory;
 import ar.edu.itba.pod.g3.api.query3.Query3Collator;
 import ar.edu.itba.pod.g3.api.query3.Query3Mapper;
 import ar.edu.itba.pod.g3.api.query3.Query3ReducerFactory;
+import ar.edu.itba.pod.g3.api.query5.Query5Collator;
+import ar.edu.itba.pod.g3.api.query5.Query5Mapper;
+import ar.edu.itba.pod.g3.api.query5.Query5ReducerFactory;
 import ar.edu.itba.pod.g3.client.csv.BUETreeCSVReader;
 import ar.edu.itba.pod.g3.client.csv.VANTreeCSVReader;
 import ar.edu.itba.pod.g3.client.exceptions.InvalidPropertyException;
@@ -128,6 +131,9 @@ public class Client {
             case 4:
                 runMinTreeQuery(hazelcastClient, treesList);
                 break;
+            case 5:
+                pairOfNeighborhoodsWithSameAmountOfThousandsOfTrees(hazelcastClient, treesList);
+                break;
             default:
                 System.out.println("Not implemented");
         }
@@ -189,6 +195,26 @@ public class Client {
 
             ResultWriter.writeQuery3Result(this.resultFilePath, result);
         } catch  (IOException ex) {
+            logger.error(String.format("Parsing error: %s", ex.getMessage()));
+        }
+    }
+
+    private void pairOfNeighborhoodsWithSameAmountOfThousandsOfTrees(HazelcastInstance hazelcastClient, IList<TreeData> treesList) throws ExecutionException, InterruptedException, IOException {
+        try {
+            Map<Integer, List<String>> answer;
+            final JobTracker jobTracker = hazelcastClient.getJobTracker("query-5");
+            final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
+
+            Job<String, TreeData> job = jobTracker.newJob(source);
+
+            ICompletableFuture<Map<Integer, List<String>>> future = job
+                    .mapper(new Query5Mapper())
+                    .reducer(new Query5ReducerFactory())
+                    .submit(new Query5Collator());
+            answer = future.get();
+
+            ResultWriter.writeQuery5Result(this.resultFilePath, answer);
+        } catch (IOException ex) {
             logger.error(String.format("Parsing error: %s", ex.getMessage()));
         }
     }
