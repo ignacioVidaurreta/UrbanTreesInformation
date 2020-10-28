@@ -46,6 +46,7 @@ public class PropertyParser {
         try {
             switch (client.getQuery()) {
                 case 1:
+                    break;
                 case 2:
                     Optional<String> maybeMinQ2 = Optional.ofNullable(arguments.getProperty("min"));
                     client.setMin(maybeMinQ2.orElseThrow(() -> new RequiredPropertyException("min")));

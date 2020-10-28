@@ -22,6 +22,5 @@ public class NeighbourhoodCSVReader {
             int population = Integer.parseInt(line[1]);
             dataConsumer.accept(neighbourhood, population);
         }
-
     }
 }
