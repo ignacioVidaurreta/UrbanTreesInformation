@@ -178,18 +178,22 @@ public class Client {
     private void totalTreesByInhabitants(
             HazelcastInstance hazelcastClient,
             IList<TreeData> treesList,
-            IMap<String, Integer> neighbourhoodData) throws ExecutionException, InterruptedException, IOException {
-        JobTracker jobTracker = hazelcastClient.getJobTracker("query-1");
-        KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
+            IMap<String, Integer> neighbourhoodData) throws ExecutionException, InterruptedException {
+        try {
+            JobTracker jobTracker = hazelcastClient.getJobTracker("query-1");
+            KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
 
-        Job<String, TreeData> job = jobTracker.newJob(source);
-        Map<String, Double> result = null;
-        ICompletableFuture<Map<String, Double>> future = job
-                .mapper (new Query1Mapper(neighbourhoodData))
-                .reducer(new Query1ReducerFactory())
-                .submit (new Query1Collator(neighbourhoodData));
-        result = future.get();
-        ResultWriter.writeQuery1Result(this.resultFilePath, result);
+            Job<String, TreeData> job = jobTracker.newJob(source);
+            Map<String, Double> result = null;
+            ICompletableFuture<Map<String, Double>> future = job
+                    .mapper (new Query1Mapper(neighbourhoodData))
+                    .reducer(new Query1ReducerFactory())
+                    .submit (new Query1Collator(neighbourhoodData));
+            result = future.get();
+            ResultWriter.writeQuery1Result(this.resultFilePath, result);
+        } catch (IOException ex) {
+            logger.error(String.format("Parsing error: %s", ex.getMessage()));
+        }
     }
 
     private void streetWithMoreTreesByNeighborhood(HazelcastInstance hazelcastClient, IList<TreeData> treesList) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {

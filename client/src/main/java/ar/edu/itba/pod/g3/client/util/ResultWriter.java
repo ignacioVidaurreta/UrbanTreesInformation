@@ -107,9 +107,21 @@ public class ResultWriter {
         FileWriter result1File = new FileWriter(resultFilePath);
         BufferedWriter result1Writer = new BufferedWriter(result1File);
         result1Writer.write("BARRIO;ARBOLES_POR_HABITANTE\n");
-        resultMap.forEach((key, value) -> {
+        resultMap.entrySet().stream().sorted(new Comparator<Map.Entry<String, Double>>() {
+            @Override
+            public int compare(Map.Entry<String, Double> e1, Map.Entry<String, Double> e2) {
+                Double e1Val =  Math.floor(e1.getValue() * 100) / 100;
+                Double e2Val =  Math.floor(e2.getValue() * 100) / 100;
+                int cmp =  e1Val.compareTo(e2Val);
+                if (cmp != 0) {
+                    return -cmp;
+                } else {
+                    return e1.getKey().compareTo(e2.getKey());
+                }
+            }
+        }).forEach(entry -> {
             try {
-                result1Writer.write(key + ";" + String.format("%.2f", value) + "\n");
+                result1Writer.write(entry.getKey() + ";" + String.format("%.2f", entry.getValue()) + "\n");
             } catch (IOException e) {
                 e.printStackTrace();
             }
