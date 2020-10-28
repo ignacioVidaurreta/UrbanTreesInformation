@@ -7,11 +7,11 @@ This repository uses Hazelcast to gather information about the Urban Trees data 
 First, you will need to compile everything and set it up so you can use our execution
 scripts. Run the following:
 ```bash
-$> ./generate_sources.sh
+$> ./generate_sources
 ```
 After that you are ready to go! Run the following script:
 ```bash
-$> ./run_server.sh
+$> ./run_server
 ```
 This will start a Hazelcast node. You can run as many of these as you like in your
 network.
