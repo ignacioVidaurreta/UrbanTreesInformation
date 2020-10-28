@@ -58,15 +58,10 @@ public class Client {
     private FileWriter timeFile;
     private BufferedWriter timeFileWriter;
 
-    //TODO: (A big one) the logic behind handling the properties parsing in another class makes the constructor
-    // a Necessity. It would be ideal that all attributes are static so there are not as many parameters being
-    // handled between all methods. This requires a well though refactor.
-
     // QUERY SPECIFIC ARGUMENTS
     private int min;
     private String name;
     private int n;
-
 
     public Client(String city, List<String> ipAddresses, String inputDirectory, String outputDirectory, int query) throws InvalidPropertyException {
         this.city = validateCity(city);
@@ -120,7 +115,7 @@ public class Client {
         } else if (client.getCity().equals("VAN")) {
             VANTreeCSVReader.readCsv(treesList::add, buildTreesCSVPath(client));
         }
-        if (query == 1) {
+        if (query == 1 || query == 2) {
             NeighbourhoodCSVReader.readCsv(neighbourhoodData::put, buildNeighbourhoodCSVPath(client));
         }
 
@@ -135,12 +130,11 @@ public class Client {
         ResultWriter.writeTime(this.timeFileWriter, "Inicio del trabajo map/reduce");
 
         switch (this.getQuery()) {
-            //TODO Implement other cases
             case 1:
                 totalTreesByInhabitants(hazelcastClient, treesList, neighbourhoodData);
                 break;
             case 2:
-                streetWithMoreTreesByNeighborhood(hazelcastClient, treesList);
+                streetWithMoreTreesByNeighborhood(hazelcastClient, treesList, neighbourhoodData);
                 break;
             case 3:
                 topNSpeciesWithBiggestDiameter(hazelcastClient, treesList);
@@ -196,7 +190,7 @@ public class Client {
         }
     }
 
-    private void streetWithMoreTreesByNeighborhood(HazelcastInstance hazelcastClient, IList<TreeData> treesList) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
+    private void streetWithMoreTreesByNeighborhood(HazelcastInstance hazelcastClient, IList<TreeData> treesList, IMap<String, Integer> neighbourhoodData) throws IOException, MalformedCSVException, ExecutionException, InterruptedException {
         try {
             final JobTracker jobTracker = hazelcastClient.getJobTracker("query-2");
             final KeyValueSource<String, TreeData> source = KeyValueSource.fromList(treesList);
@@ -205,7 +199,7 @@ public class Client {
             Map<String, Tuple<String, Integer>> result = null;
 
             ICompletableFuture<Map<String, Tuple<String, Integer>>> future = job
-                    .mapper(new Query2Mapper())
+                    .mapper(new Query2Mapper(neighbourhoodData.keySet()))
                     .reducer(new Query2ReducerFactory())
                     .submit(new Query2Collator(this.getMin()));
             result = future.get();

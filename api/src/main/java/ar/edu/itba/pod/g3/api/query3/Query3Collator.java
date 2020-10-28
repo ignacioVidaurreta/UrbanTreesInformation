@@ -28,7 +28,10 @@ public class Query3Collator implements Collator<Map.Entry<String, Double>, List<
         List<Map.Entry<String, Double>> list = map.entrySet().stream().sorted(new Comparator<Map.Entry<String, Double>>() {
             @Override
             public int compare(Map.Entry<String, Double> o1, Map.Entry<String, Double> o2) {
-                return o2.getValue().compareTo(o1.getValue());
+                int diff = o2.getValue().compareTo(o1.getValue());
+                if(diff != 0)
+                    return diff;
+                return o1.getKey().compareTo(o2.getKey());
             }
         }).collect(Collectors.toList());
 

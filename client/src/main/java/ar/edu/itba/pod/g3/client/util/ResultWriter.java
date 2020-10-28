@@ -7,6 +7,9 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -19,7 +22,8 @@ public class ResultWriter {
     public static void writeTime(BufferedWriter outputFileWriter, String message) throws IOException {
         long time = new Date().getTime();
         Timestamp currentTime = new Timestamp(time);
-        outputFileWriter.write(currentTime + "\tINFO [main] Client -" + "\t" + message + "\n"); //TODO: include class and line like assigment example shows
+        SimpleDateFormat dformat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss:SSSS");
+        outputFileWriter.write( dformat.format(currentTime) + " INFO [main] Client - " + message + "\n");
     }
 
     public static void writeQuery2Result(String resultFilePath, Map<String, Tuple<String, Integer>> resultMap) throws IOException {
