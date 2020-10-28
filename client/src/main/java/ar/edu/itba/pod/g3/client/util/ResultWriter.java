@@ -95,11 +95,11 @@ public class ResultWriter {
                         }
                     }
                 }
-                result5Writer.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         });
+        result5Writer.close();
     }
 
     public static void writeQuery1Result(String resultFilePath, Map<String, Double> resultMap) throws IOException {
