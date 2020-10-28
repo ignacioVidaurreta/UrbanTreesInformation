@@ -1,6 +1,5 @@
 package ar.edu.itba.pod.g3.client;
 
-import ar.edu.itba.pod.g3.api.models.NeighbourhoodData;
 import ar.edu.itba.pod.g3.api.models.TreeData;
 import ar.edu.itba.pod.g3.client.csv.BUETreeCSVReader;
 import ar.edu.itba.pod.g3.client.csv.NeighbourhoodCSVReader;
@@ -13,8 +12,10 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static ar.edu.itba.pod.g3.client.Client.buildNeighbourhoodCSVPath;
 import static ar.edu.itba.pod.g3.client.Client.buildTreesCSVPath;
@@ -35,12 +36,12 @@ public class CSVParserTest {
     @Test
     public void parsesNeighbourhoodCorrectlyTest() throws InvalidPropertyException, IOException, MalformedCSVException {
 
-        List<NeighbourhoodData> neighbourhoodData = new LinkedList<>();
-        NeighbourhoodCSVReader.readCsv(neighbourhoodData::add, buildNeighbourhoodCSVPath(clientBUE));
+        Map<String, Integer> neighbourhoodData = new HashMap<>();
+        NeighbourhoodCSVReader.readCsv(neighbourhoodData::put, buildNeighbourhoodCSVPath(clientBUE));
         Assert.assertFalse(neighbourhoodData.isEmpty());
 
-        neighbourhoodData = new LinkedList<>();
-        NeighbourhoodCSVReader.readCsv(neighbourhoodData::add, buildNeighbourhoodCSVPath(clientVAN));
+        neighbourhoodData = new HashMap<>();
+        NeighbourhoodCSVReader.readCsv(neighbourhoodData::put, buildNeighbourhoodCSVPath(clientVAN));
         Assert.assertFalse(neighbourhoodData.isEmpty());
     }
 

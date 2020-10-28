@@ -69,10 +69,10 @@ public class ResultWriter {
         }).collect(Collectors.toList());
 
         IntStream.range(0, size).forEach((index -> {
-            IntStream.range(index + 1 , size).forEach(index2 -> {
+            IntStream.range(index + 1, size).forEach(index2 -> {
                 try {
-                    result2Writer.write(String.format("%s;%s\n",sorted_results.get(index).getKey(), sorted_results.get(index2).getKey()));
-                }catch (IOException ex){
+                    result2Writer.write(String.format("%s;%s\n", sorted_results.get(index).getKey(), sorted_results.get(index2).getKey()));
+                } catch (IOException ex) {
                     ex.printStackTrace();
                 }
             });
@@ -95,10 +95,37 @@ public class ResultWriter {
                         }
                     }
                 }
+                result5Writer.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         });
-        result5Writer.close();
+    }
+
+    public static void writeQuery1Result(String resultFilePath, Map<String, Double> resultMap) throws IOException {
+        System.out.println("writing result");
+        FileWriter result1File = new FileWriter(resultFilePath);
+        BufferedWriter result1Writer = new BufferedWriter(result1File);
+        result1Writer.write("BARRIO;ARBOLES_POR_HABITANTE\n");
+        resultMap.entrySet().stream().sorted(new Comparator<Map.Entry<String, Double>>() {
+            @Override
+            public int compare(Map.Entry<String, Double> e1, Map.Entry<String, Double> e2) {
+                Double e1Val =  Math.floor(e1.getValue() * 100) / 100;
+                Double e2Val =  Math.floor(e2.getValue() * 100) / 100;
+                int cmp =  e1Val.compareTo(e2Val);
+                if (cmp != 0) {
+                    return -cmp;
+                } else {
+                    return e1.getKey().compareTo(e2.getKey());
+                }
+            }
+        }).forEach(entry -> {
+            try {
+                result1Writer.write(entry.getKey() + ";" + String.format("%.2f", entry.getValue()) + "\n");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        result1Writer.close();
     }
 }
