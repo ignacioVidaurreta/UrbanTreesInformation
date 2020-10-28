@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd ../server/target/tpe2-g3-server-1.0-SNAPSHOT/ || (echo "Error!"; exit 1)
+
+./run-server.sh "$@"
