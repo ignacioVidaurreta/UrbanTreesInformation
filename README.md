@@ -87,3 +87,12 @@ We assume that the directory `/tmp/data` contains the data we are parsing.
 ```bash
 $> ./query5 -Dcity=VAN -Daddress="10.6.0.1:5701" -DinPath="/tmp/data" -DoutPath="/tmp/results"
 ```
+
+**E2E tests**
+`cd` to `scripts`
+
+Compile running `./generate_sources`
+
+Run a server instance with `./run_server`
+
+Run the tests by running `run_tests.sh`
