@@ -40,11 +40,11 @@
             <ports>0</ports>
         </outbound-ports>
         <join>
-            <multicast enabled="false">
+            <multicast enabled="true">
                 <multicast-group>224.2.2.3</multicast-group>
                 <multicast-port>57250</multicast-port>
             </multicast>
-            <tcp-ip enabled="true">
+            <tcp-ip enabled="false">
                 <interface>127.0.0.1:57250</interface>
                 <member-list>
                     <member>127.0.0.1:57250</member>
